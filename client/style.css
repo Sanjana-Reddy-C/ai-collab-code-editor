@@ -1,0 +1,27 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', sans-serif; background: #1e1e2e; color: #cdd6f4; height: 100vh; }
+
+/* Join Screen */
+#join-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
+.join-card { background: #313244; padding: 2rem; border-radius: 12px; width: 360px; text-align: center; }
+.join-card h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+.join-card p { color: #a6adc8; margin-bottom: 1.5rem; }
+.join-card input { width: 100%; padding: 0.6rem 1rem; margin: 0.4rem 0; border-radius: 6px; border: none; background: #45475a; color: #cdd6f4; }
+.join-card button { width: 100%; padding: 0.7rem; margin-top: 1rem; background: #89b4fa; color: #1e1e2e; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+
+/* Editor Layout */
+#editor-screen { display: flex; flex-direction: column; height: 100vh; }
+#toolbar { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: #181825; border-bottom: 1px solid #45475a; }
+#toolbar button { padding: 0.4rem 0.8rem; border-radius: 5px; border: none; cursor: pointer; background: #89b4fa; color: #1e1e2e; font-weight: bold; }
+#run-btn { background: #a6e3a1; }
+#room-display { font-size: 0.85rem; background: #313244; padding: 0.3rem 0.7rem; border-radius: 5px; }
+#main-area { display: flex; flex: 1; overflow: hidden; }
+#editor-container { flex: 1; overflow: hidden; }
+.CodeMirror { height: 100% !important; font-size: 14px; }
+#output-panel { width: 300px; background: #181825; border-left: 1px solid #45475a; display: flex; flex-direction: column; }
+#output-header { padding: 0.5rem 1rem; background: #313244; font-weight: bold; }
+#output-display { padding: 1rem; overflow-y: auto; flex: 1; font-size: 13px; color: #a6e3a1; white-space: pre-wrap; }
+
+/* Toast Notification */
+.toast { position: fixed; bottom: 2rem; right: 2rem; background: #313244; padding: 0.7rem 1.2rem; border-radius: 8px; border-left: 4px solid #89b4fa; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

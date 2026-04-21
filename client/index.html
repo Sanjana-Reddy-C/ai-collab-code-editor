@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CollabCode</title>
+  <!-- CodeMirror: a powerful browser-based code editor -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- JOIN SCREEN -->
+  <div id="join-screen">
+    <div class="join-card">
+      <h1>💻 CollabCode</h1>
+      <p>Real-time collaborative code editor</p>
+      <input id="username-input" placeholder="Your name" />
+      <input id="room-input" placeholder="Room ID (or leave blank to create)" />
+      <button id="join-btn">Join / Create Room</button>
+    </div>
+  </div>
+
+  <!-- EDITOR SCREEN -->
+  <div id="editor-screen" style="display:none">
+    <div id="toolbar">
+      <span id="room-display"></span>
+      <span id="user-count">👥 1 user</span>
+      <button id="copy-link-btn">📋 Copy Link</button>
+      <select id="language-select">
+        <option value="javascript">JavaScript</option>
+        <option value="python">Python</option>
+        <option value="cpp">C++</option>
+        <option value="java">Java</option>
+      </select>
+      <button id="run-btn">▶ Run Code</button>
+    </div>
+
+    <div id="main-area">
+      <div id="editor-container">
+        <textarea id="code-editor"></textarea>
+      </div>
+      <div id="output-panel">
+        <div id="output-header">Output</div>
+        <pre id="output-display">// Output will appear here...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io client (served automatically by the server) -->
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>
