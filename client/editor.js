@@ -31,7 +31,9 @@ document.getElementById('join-btn').addEventListener('click', () => {
     matchBrackets: true,
     indentWithTabs: false,
   });
+  window.editorInstance = editor;
 
+ 
   
   editor.on('change', (instance, changeObj) => {
     
@@ -105,3 +107,35 @@ const roomFromUrl = urlParams.get('room');
 if (roomFromUrl) {
   document.getElementById('room-input').value = roomFromUrl;
 }
+document.getElementById('run-btn').addEventListener('click', async () => {
+  const code = editor.getValue();
+  const language = document.getElementById('language-select').value;
+  const output = document.getElementById('output-display');
+
+  console.log("SENDING:", { code, language });  // ✅ moved to top so it always logs
+
+  output.textContent = '⏳ Running...';
+
+  try {
+    const response = await fetch('http://localhost:3000/run-code', {  // ✅ await added
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, language })
+    });
+
+    const data = await response.json();  // ✅ 'response' not 'res'
+
+    console.log("Piston response:", data);
+
+    const result =
+      data.run?.stdout ||
+      data.run?.stderr ||
+      'No output';
+
+    output.textContent = result;
+
+  } catch (err) {
+    console.error("Run error:", err);    // ✅ shows actual error in console
+    output.textContent = 'Error running code: ' + err.message;
+  }
+});
