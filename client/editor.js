@@ -1,3 +1,6 @@
+import * as Y from 'yjs'
+import { WebsocketProvider } from 'y-websocket'
+import { CodemirrorBinding } from 'y-codemirror'
 const socket = io('http://localhost:3000');
 
 let editor;           
@@ -31,47 +34,60 @@ document.getElementById('join-btn').addEventListener('click', () => {
     matchBrackets: true,
     indentWithTabs: false,
   });
+  editor.on('change', () => {
+  window.lastEditTime = Date.now()
+  })
+  // ==========================
+// YJS SETUP
+// ==========================
+
+const ydoc = new Y.Doc()
+
+const provider = new WebsocketProvider(
+  'ws://localhost:1234',
+  currentRoom,
+  ydoc
+)
+
+const yText = ydoc.getText('codemirror')
+
+const binding = new CodemirrorBinding(
+  yText,
+  editor,
+  provider.awareness
+)
   window.editorInstance = editor;
+// ==========================
+// YJS METRICS LOGGING
+// ==========================
 
- 
-  
-  editor.on('change', (instance, changeObj) => {
-    
-    if (isApplyingRemote) return;
-    if (changeObj.origin === 'setValue') return; 
+// Connection status
+provider.on('status', event => {
+  console.log('Yjs Status:', event.status)
+})
 
-    socket.emit('code-change', {
-      roomId: currentRoom,
-      code: editor.getValue()
-    });
-  });
+// Sync update tracking
+yText.observe(event => {
+  const receiveTime = Date.now()
 
- 
-  socket.emit('join-room', { roomId, username });
-});
+  console.log('Sync update received at:', receiveTime)
 
-
-socket.on('load-code', ({ code }) => {
-  if (editor) {
-    isApplyingRemote = true;
-    editor.setValue(code);
-    isApplyingRemote = false;
+  // Approximate latency calculation
+  if (window.lastEditTime) {
+    const latency = receiveTime - window.lastEditTime
+    console.log('Approx Sync Latency:', latency, 'ms')
   }
+})
+ 
+ 
+
+ 
+socket.emit('join-room', {
+  roomId,
+  username
+});
 });
 
-
-socket.on('code-update', ({ code }) => {
-  if (!editor) return;
-
-  
-  const cursor = editor.getCursor();
-
-  isApplyingRemote = true;     
-  editor.setValue(code);       
-  isApplyingRemote = false;  
-
-  editor.setCursor(cursor);    
-});
 
 socket.on('user-joined', ({ username, userCount }) => {
   document.getElementById('user-count').textContent = `👥 ${userCount} user${userCount > 1 ? 's' : ''}`;
@@ -112,18 +128,18 @@ document.getElementById('run-btn').addEventListener('click', async () => {
   const language = document.getElementById('language-select').value;
   const output = document.getElementById('output-display');
 
-  console.log("SENDING:", { code, language });  // ✅ moved to top so it always logs
+  console.log("SENDING:", { code, language });  // moved to top so it always logs
 
   output.textContent = '⏳ Running...';
 
   try {
-    const response = await fetch('http://localhost:3000/run-code', {  // ✅ await added
+    const response = await fetch('http://localhost:3000/run-code', {  //  await added
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, language })
     });
 
-    const data = await response.json();  // ✅ 'response' not 'res'
+    const data = await response.json();  // 'response' not 'res'
 
     console.log("Piston response:", data);
 
@@ -135,7 +151,7 @@ document.getElementById('run-btn').addEventListener('click', async () => {
     output.textContent = result;
 
   } catch (err) {
-    console.error("Run error:", err);    // ✅ shows actual error in console
+    console.error("Run error:", err);    //  shows actual error in console
     output.textContent = 'Error running code: ' + err.message;
   }
 });
