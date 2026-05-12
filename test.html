@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Collab Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+<h2>🔥 Collab Test</h2>
+
+<input id="roomId" placeholder="Enter Room ID" />
+<button onclick="joinRoom()">Join Room</button>
+
+<br><br>
+
+<textarea id="editor" rows="10" cols="50" placeholder="Start typing..."></textarea>
+
+<br><br>
+
+<input id="message" placeholder="Type message" />
+<button onclick="sendMessage()">Send</button>
+
+<ul id="chat"></ul>
+
+<h3>👥 Participants:</h3>
+<ul id="users"></ul>
+
+<script>
+  const socket = io("http://localhost:5000");
+
+  let currentRoom = "";
+  let userId = Math.random().toString(36).substring(7);
+
+  function joinRoom() {
+    currentRoom = document.getElementById("roomId").value;
+
+    socket.emit("join-room", {
+      roomId: currentRoom,
+      userId: userId
+    });
+  }
+
+  // ✍️ CODE CHANGE
+  const editor = document.getElementById("editor");
+
+  editor.addEventListener("input", () => {
+    socket.emit("code-change", {
+      roomId: currentRoom,
+      code: editor.value
+    });
+  });
+
+  socket.on("code-update", (code) => {
+    editor.value = code;
+  });
+
+  // 💬 CHAT
+  function sendMessage() {
+    const msg = document.getElementById("message").value;
+
+    socket.emit("send-message", {
+      roomId: currentRoom,
+      message: msg
+    });
+  }
+
+  socket.on("receive-message", (msg) => {
+    const li = document.createElement("li");
+    li.textContent = msg;
+    document.getElementById("chat").appendChild(li);
+  });
+
+  // 👥 PARTICIPANTS
+  socket.on("participants", (users) => {
+    const list = document.getElementById("users");
+    list.innerHTML = "";
+
+    users.forEach(user => {
+      const li = document.createElement("li");
+      li.textContent = user.userId;
+      list.appendChild(li);
+    });
+  });
+</script>
+</body>
+</html>
