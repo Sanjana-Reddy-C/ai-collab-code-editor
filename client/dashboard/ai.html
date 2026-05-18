@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>AI Insights</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Segoe UI;
+    }
+
+    body{
+      display:flex;
+      background:#f1f5f9;
+      color:#0f172a;
+    }
+
+    .sidebar{
+      width:260px;
+      background:white;
+      height:100vh;
+      padding:30px 20px;
+      border-right:1px solid #e2e8f0;
+      position:fixed;
+    }
+
+    .logo{
+      font-size:28px;
+      font-weight:bold;
+      color:#2563eb;
+      margin-bottom:50px;
+    }
+
+    .menu{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .menu a{
+      text-decoration:none;
+      color:#334155;
+      padding:14px;
+      border-radius:12px;
+      font-size:20px;
+      transition:0.3s;
+    }
+
+    .menu a:hover,
+    .active{
+      background:#2563eb;
+      color:white !important;
+    }
+
+    .main{
+      margin-left:260px;
+      width:100%;
+      padding:40px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:35px;
+    }
+
+    .title{
+      font-size:52px;
+      font-weight:bold;
+    }
+
+    .subtitle{
+      color:#64748b;
+      margin-top:10px;
+      font-size:18px;
+    }
+
+    .status{
+      background:white;
+      padding:15px 25px;
+      border-radius:15px;
+      color:#16a34a;
+      font-weight:bold;
+      box-shadow:0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+      gap:25px;
+    }
+
+    .card{
+      background:white;
+      border-radius:25px;
+      padding:30px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.05);
+    }
+
+    .card h2{
+      margin-bottom:25px;
+      color:#2563eb;
+      font-size:30px;
+    }
+
+    .metric{
+      margin-bottom:20px;
+      font-size:20px;
+      color:#334155;
+    }
+
+    .metric span{
+      font-weight:bold;
+      color:#0f172a;
+    }
+
+    .progress{
+      height:14px;
+      background:#e2e8f0;
+      border-radius:20px;
+      overflow:hidden;
+      margin-top:15px;
+    }
+
+    .progress div{
+      height:100%;
+      background:linear-gradient(90deg,#2563eb,#7c3aed);
+    }
+
+    .suggestion{
+      background:#f8fafc;
+      padding:18px;
+      border-radius:15px;
+      margin-bottom:18px;
+      font-size:18px;
+      line-height:1.6;
+      border-left:6px solid #2563eb;
+    }
+
+    .tag{
+      display:inline-block;
+      background:linear-gradient(90deg,#2563eb,#7c3aed);
+      color:white;
+      padding:10px 18px;
+      border-radius:30px;
+      font-weight:bold;
+      margin-bottom:20px;
+    }
+
+    .heatmap{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:10px;
+      margin-top:20px;
+    }
+
+    .heat{
+      height:50px;
+      border-radius:10px;
+    }
+
+    .insight-card{
+      background:#f8fafc;
+      padding:18px;
+      border-radius:14px;
+      margin-bottom:15px;
+      font-size:18px;
+    }
+
+    .room-card{
+      background:#f8fafc;
+      padding:18px;
+      border-radius:14px;
+      margin-bottom:18px;
+    }
+
+    .room-card h3{
+      margin-bottom:10px;
+      color:#2563eb;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo">
+      🚀 CollabCode
+    </div>
+
+    <div class="menu">
+
+      <a href="dashboard.html">📊 Dashboard</a>
+
+      <a href="users.html">👥 Users</a>
+
+      <a href="rooms.html">🏠 Rooms</a>
+
+      <a href="sessions.html">⏱ Sessions</a>
+
+      <a class="active" href="ai.html">🤖 AI Insights</a>
+
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <div class="header">
+
+      <div>
+
+        <div class="title">
+          🤖 AI Intelligence Center
+        </div>
+
+        <div class="subtitle">
+          Real-time AI collaboration and code analytics
+        </div>
+
+      </div>
+
+      <div class="status">
+        ● AI Engine Active
+      </div>
+
+    </div>
+
+    <div class="grid">
+
+      <!-- AI REVIEW -->
+
+      <div class="card">
+
+        <h2>🧠 AI Review Metrics</h2>
+
+        <div class="metric">
+          Suggestions Generated:
+          <span>42</span>
+        </div>
+
+        <div class="metric">
+          Bugs Detected:
+          <span>9</span>
+        </div>
+
+        <div class="metric">
+          Optimization Tips:
+          <span>17</span>
+        </div>
+
+        <div class="metric">
+          Security Warnings:
+          <span>5</span>
+        </div>
+
+        <div class="tag">
+          AI Accuracy 92%
+        </div>
+
+        <div class="progress">
+          <div style="width:92%"></div>
+        </div>
+
+      </div>
+
+      <!-- INSIGHTS -->
+
+      <div class="card">
+
+        <h2>🔥 Collaboration Insights</h2>
+
+        <div id="insightsContainer"></div>
+
+      </div>
+
+      <!-- MOST EDITED ROOMS -->
+
+      <div class="card">
+
+        <h2>🏆 Most Edited Rooms</h2>
+
+        <div id="roomsContainer"></div>
+
+      </div>
+
+      <!-- LIVE FEED -->
+
+      <div class="card">
+
+        <h2>🧠 Live AI Activity Feed</h2>
+
+        <div id="activityFeed"></div>
+
+      </div>
+
+      <!-- HEATMAP -->
+
+      <div class="card">
+
+        <h2>🔥 Collaboration Heatmap</h2>
+
+        <div class="heatmap" id="heatmap"></div>
+
+      </div>
+
+      <!-- LANGUAGE CHART -->
+
+      <div class="card">
+
+        <h2>📊 Language Usage</h2>
+
+        <canvas id="languageChart"></canvas>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    async function loadAIInsights(){
+
+      const usersRes =
+        await fetch("http://localhost:3000/api/analytics/users");
+
+      const usersData =
+        await usersRes.json();
+
+      const roomsRes =
+        await fetch("http://localhost:3000/api/analytics/rooms");
+
+      const roomsData =
+        await roomsRes.json();
+
+      const sessionsRes =
+        await fetch("http://localhost:3000/api/analytics/sessions");
+
+      const sessionsData =
+        await sessionsRes.json();
+
+      // TOP USER
+
+      const topUser =
+        usersData.users.sort(
+          (a,b) => b.totalEdits - a.totalEdits
+        )[0];
+
+      // TOP ROOM
+
+      const topRoom =
+        roomsData.rooms.sort(
+          (a,b) => b.totalEdits - a.totalEdits
+        )[0];
+
+      // INSIGHTS
+
+      document.getElementById("insightsContainer").innerHTML = `
+
+        <div class="insight-card">
+          👤 Most Active User:
+          <b>${topUser.username}</b>
+        </div>
+
+        <div class="insight-card">
+          🏠 Most Active Room:
+          <b>${topRoom.roomId}</b>
+        </div>
+
+        <div class="insight-card">
+          ✏ Highest Contributions:
+          <b>${topUser.totalEdits}</b>
+        </div>
+
+        <div class="insight-card">
+          ⚡ Active Sessions:
+          <b>${sessionsData.activeSessions}</b>
+        </div>
+
+        <div class="insight-card">
+          📊 Total Rooms:
+          <b>${roomsData.rooms.length}</b>
+        </div>
+
+      `;
+
+      // ROOMS
+
+      let roomsHTML = "";
+
+      roomsData.rooms.forEach(room => {
+
+        roomsHTML += `
+
+          <div class="room-card">
+
+            <h3>Room ${room.roomId}</h3>
+
+            <p>
+              Total Edits:
+              <b>${room.totalEdits}</b>
+            </p>
+
+            <p>
+              Top Contributor:
+              <b>
+                ${
+                  room.topContributors[0]
+                  ? room.topContributors[0].username
+                  : "None"
+                }
+              </b>
+            </p>
+
+          </div>
+
+        `;
+
+      });
+
+      document.getElementById("roomsContainer").innerHTML =
+        roomsHTML;
+
+      // HEATMAP
+
+      const heatmap =
+        document.getElementById("heatmap");
+
+      heatmap.innerHTML = "";
+
+      usersData.users.forEach(user => {
+
+        const intensity =
+          Math.min(user.totalEdits * 8, 255);
+
+        const heat =
+          document.createElement("div");
+
+        heat.className = "heat";
+
+        heat.style.background =
+          `rgba(37,99,235,${intensity / 255})`;
+
+        heat.title =
+          `${user.username}: ${user.totalEdits} edits`;
+
+        heatmap.appendChild(heat);
+
+      });
+
+      // LANGUAGE CHART
+
+      new Chart(
+        document.getElementById("languageChart"),
+        {
+          type:"doughnut",
+
+          data:{
+            labels:[
+              "JavaScript",
+              "Python",
+              "Java",
+              "C++"
+            ],
+
+            datasets:[{
+              data:[58,22,12,8]
+            }]
+          }
+        }
+      );
+
+    }
+
+    // LIVE FEED
+
+    const feedMessages = [
+
+      "✅ AI optimized async database queries.",
+
+      "⚠ AI detected repeated collaboration loops.",
+
+      "🚀 AI suggested caching API responses.",
+
+      "🔒 AI detected weak room validation.",
+
+      "📈 AI improved editor rendering performance.",
+
+      "🧠 AI analyzed user collaboration patterns.",
+
+      "⚡ AI reduced socket latency.",
+
+      "🔥 AI detected highly active room session."
+
+    ];
+
+    function loadFeed(){
+
+      const container =
+        document.getElementById("activityFeed");
+
+      container.innerHTML = "";
+
+      feedMessages.forEach(msg => {
+
+        container.innerHTML += `
+
+          <div class="suggestion">
+            ${msg}
+          </div>
+
+        `;
+
+      });
+
+    }
+
+    loadAIInsights();
+    loadFeed();
+    setInterval(() => {
+
+  location.reload();
+
+}, 10000);
+
+  </script>
+
+</body>
+</html>

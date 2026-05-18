@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Users Analytics</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Segoe UI;
+    }
+
+    body{
+      background:#f1f5f9;
+      display:flex;
+      color:#0f172a;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar{
+      width:260px;
+      height:100vh;
+      background:white;
+      border-right:1px solid #e2e8f0;
+      padding:30px 20px;
+      position:fixed;
+      left:0;
+      top:0;
+    }
+
+    .logo{
+      font-size:46px;
+      font-weight:bold;
+      color:#2563eb;
+      margin-bottom:50px;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .nav a{
+      text-decoration:none;
+      color:#334155;
+      font-size:21px;
+      padding:16px;
+      border-radius:14px;
+      transition:0.3s;
+    }
+
+    .nav a:hover{
+      background:#eff6ff;
+    }
+
+    .active{
+      background:#2563eb;
+      color:white !important;
+    }
+
+    /* MAIN */
+
+    .main{
+      margin-left:260px;
+      width:calc(100% - 260px);
+      padding:40px;
+    }
+
+    .title{
+      font-size:52px;
+      font-weight:bold;
+      margin-bottom:40px;
+    }
+
+    /* GRID */
+
+    .users-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+      gap:30px;
+    }
+
+    .user-card{
+      background:white;
+      border-radius:24px;
+      padding:30px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.06);
+      transition:0.3s;
+    }
+
+    .user-card:hover{
+      transform:translateY(-6px);
+    }
+
+    .user-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:25px;
+    }
+
+    .username{
+      font-size:32px;
+      font-weight:bold;
+      color:#2563eb;
+      word-break:break-word;
+      width:70%;
+    }
+
+    .status{
+      padding:10px 18px;
+      border-radius:999px;
+      font-weight:bold;
+      font-size:15px;
+    }
+
+    .online{
+      background:#dcfce7;
+      color:#15803d;
+    }
+
+    .offline{
+      background:#fee2e2;
+      color:#b91c1c;
+    }
+
+    .stat{
+      margin-bottom:18px;
+      font-size:21px;
+      color:#334155;
+    }
+
+    .label{
+      color:#64748b;
+    }
+
+    .progress-container{
+      width:100%;
+      height:16px;
+      background:#e2e8f0;
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:20px;
+    }
+
+    .progress-bar{
+      height:100%;
+      background:linear-gradient(to right,#2563eb,#7c3aed);
+      border-radius:999px;
+    }
+
+    .rooms-box{
+      margin-top:25px;
+      padding:20px;
+      border-radius:18px;
+      background:#f8fafc;
+    }
+
+    .rooms-title{
+      font-size:18px;
+      font-weight:bold;
+      margin-bottom:14px;
+      color:#0f172a;
+    }
+
+    .room-tag{
+      display:inline-block;
+      background:#dbeafe;
+      color:#2563eb;
+      padding:10px 16px;
+      border-radius:999px;
+      margin:6px;
+      font-weight:bold;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo">
+      🚀 CollabCode
+    </div>
+
+    <div class="nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a class="active" href="users.html">👥 Users</a>
+      <a href="rooms.html">🏠 Rooms</a>
+      <a href="sessions.html">⏱ Sessions</a>
+      <a href="ai.html">🤖 AI Insights</a>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <div class="title">
+      👥 Users Analytics
+    </div>
+
+    <div class="users-grid" id="usersGrid"></div>
+
+  </div>
+
+  <script>
+
+    async function loadUsers(){
+
+      const res =
+        await fetch("http://localhost:3000/api/analytics/users");
+
+      const data =
+        await res.json();
+
+      const container =
+        document.getElementById("usersGrid");
+
+      container.innerHTML = "";
+
+      data.users.forEach(user => {
+
+        const statusClass =
+          user.status === "Active"
+            ? "online"
+            : "offline";
+
+        let roomsHTML = "";
+
+        if(user.rooms){
+
+          user.rooms.forEach(room => {
+
+            roomsHTML += `
+              <div class="room-tag">
+                Room ${room}
+              </div>
+            `;
+
+          });
+
+        }
+
+        container.innerHTML += `
+
+          <div class="user-card">
+
+            <div class="user-header">
+
+              <div class="username">
+                ${user.username}
+              </div>
+
+              <div class="status ${statusClass}">
+                ${user.status}
+              </div>
+
+            </div>
+
+            <div class="stat">
+              ✏️ <span class="label">Total Contributions:</span>
+              <b>${user.totalEdits}</b>
+            </div>
+
+            <div class="stat">
+              📊 <span class="label">Contribution Percentage:</span>
+              <b>${user.contributionPercentage}%</b>
+            </div>
+
+            <div class="stat">
+              🏠 <span class="label">Rooms Joined:</span>
+              <b>${user.roomsJoined}</b>
+            </div>
+
+            <div class="progress-container">
+
+              <div
+                class="progress-bar"
+                style="width:${user.contributionPercentage}%">
+              </div>
+
+            </div>
+
+            <div class="rooms-box">
+
+              <div class="rooms-title">
+                Joined Rooms
+              </div>
+
+              ${roomsHTML}
+
+            </div>
+
+          </div>
+
+        `;
+
+      });
+
+    }
+
+    loadUsers();
+    setInterval(loadUsers, 5000);
+    setInterval(() => {
+
+  location.reload();
+
+}, 10000);
+
+  </script>
+
+</body>
+</html>

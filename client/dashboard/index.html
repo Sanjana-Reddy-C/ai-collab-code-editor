@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Collab Analytics Dashboard</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <h1>🚀 Collab Editor Dashboard</h1>
+  </div>
+
+  <div class="layout">
+
+    <div class="sidebar">
+
+      <button>🏠 Editor</button>
+      <button class="active">📊 Dashboard</button>
+      <button>👥 Users</button>
+      <button>🏢 Rooms</button>
+      <button>⚡ Sessions</button>
+      <button>🧠 AI Insights</button>
+
+    </div>
+
+    <div class="content">
+
+      <div class="cards">
+
+        <div class="card">
+          <h3>Total Sessions</h3>
+          <p id="sessions-count">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Total Rooms</h3>
+          <p id="rooms-count">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Total Users</h3>
+          <p id="users-count">0</p>
+        </div>
+
+      </div>
+
+      <div class="chart-container">
+        <canvas id="usersChart"></canvas>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="dashboard.js"></script>
+
+</body>
+
+</html>

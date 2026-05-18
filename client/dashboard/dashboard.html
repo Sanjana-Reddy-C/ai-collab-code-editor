@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>CollabCode Analytics</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Segoe UI;
+    }
+
+    body{
+      background:#f1f5f9;
+      display:flex;
+      color:#0f172a;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar{
+      width:260px;
+      height:100vh;
+      background:white;
+      border-right:1px solid #e2e8f0;
+      padding:30px 20px;
+      position:fixed;
+      left:0;
+      top:0;
+    }
+
+    .logo{
+      font-size:46px;
+      font-weight:bold;
+      color:#2563eb;
+      margin-bottom:50px;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .nav a{
+      text-decoration:none;
+      color:#334155;
+      font-size:21px;
+      padding:16px;
+      border-radius:14px;
+      transition:0.3s;
+    }
+
+    .nav a:hover{
+      background:#eff6ff;
+    }
+
+    .active{
+      background:#2563eb;
+      color:white !important;
+    }
+
+    /* MAIN */
+
+    .main{
+      margin-left:260px;
+      width:calc(100% - 260px);
+      padding:40px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:40px;
+    }
+
+    .title{
+      font-size:52px;
+      font-weight:bold;
+    }
+
+    .subtitle{
+      color:#64748b;
+      margin-top:8px;
+      font-size:18px;
+    }
+
+    .status{
+      background:white;
+      padding:14px 24px;
+      border-radius:14px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.06);
+      font-weight:bold;
+      color:#16a34a;
+    }
+
+    /* CARDS */
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:25px;
+      margin-bottom:40px;
+    }
+
+    .card{
+      background:white;
+      padding:30px;
+      border-radius:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.06);
+      transition:0.3s;
+    }
+
+    .card:hover{
+      transform:translateY(-5px);
+    }
+
+    .card-title{
+      color:#64748b;
+      margin-bottom:15px;
+      font-size:18px;
+    }
+
+    .card-value{
+      font-size:48px;
+      font-weight:bold;
+      color:#2563eb;
+    }
+
+    /* GRID */
+
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:30px;
+      margin-bottom:30px;
+    }
+
+    .panel{
+      background:white;
+      border-radius:24px;
+      padding:30px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    .panel h2{
+      margin-bottom:25px;
+      font-size:30px;
+    }
+
+    /* ACTIVITY */
+
+    .activity-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 0;
+      border-bottom:1px solid #e2e8f0;
+    }
+
+    .activity-item:last-child{
+      border:none;
+    }
+
+    .activity-user{
+      font-weight:bold;
+      font-size:18px;
+    }
+
+    .activity-room{
+      color:#64748b;
+      margin-top:4px;
+    }
+
+    .activity-count{
+      background:#dbeafe;
+      color:#2563eb;
+      padding:10px 18px;
+      border-radius:999px;
+      font-weight:bold;
+    }
+
+    canvas{
+      max-height:350px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo">
+      🚀 CollabCode
+    </div>
+
+    <div class="nav">
+      <a class="active" href="dashboard.html">📊 Dashboard</a>
+      <a href="users.html">👥 Users</a>
+      <a href="rooms.html">🏠 Rooms</a>
+      <a href="sessions.html">⏱ Sessions</a>
+      <a href="ai.html">🤖 AI Insights</a>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <div class="topbar">
+
+      <div>
+
+        <div class="title">
+          Analytics Dashboard
+        </div>
+
+        <div class="subtitle">
+          Real-time collaboration analytics overview
+        </div>
+
+      </div>
+
+      <div class="status">
+        ● System Active
+      </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-title">Total Users</div>
+        <div class="card-value" id="totalUsers">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Total Rooms</div>
+        <div class="card-value" id="totalRooms">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Total Sessions</div>
+        <div class="card-value" id="totalSessions">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Active Sessions</div>
+        <div class="card-value" id="activeSessions">0</div>
+      </div>
+
+    </div>
+
+    <!-- CHART + ACTIVITY -->
+
+    <div class="dashboard-grid">
+
+      <!-- CHART -->
+
+      <div class="panel">
+
+        <h2>📈 Contribution Overview</h2>
+
+        <canvas id="contributionChart"></canvas>
+
+      </div>
+
+      <!-- RECENT USERS -->
+
+      <div class="panel">
+
+        <h2>🔥 Most Active Users</h2>
+
+        <div id="activityContainer"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    async function loadDashboard(){
+
+      // USERS
+
+      const usersRes =
+        await fetch("http://localhost:3000/api/analytics/users");
+
+      const usersData =
+        await usersRes.json();
+
+      // ROOMS
+
+      const roomsRes =
+        await fetch("http://localhost:3000/api/analytics/rooms");
+
+      const roomsData =
+        await roomsRes.json();
+
+      // SESSIONS
+
+      const sessionsRes =
+        await fetch("http://localhost:3000/api/analytics/sessions");
+
+      const sessionsData =
+        await sessionsRes.json();
+
+      // STATS
+
+      document.getElementById("totalUsers").innerText =
+        usersData.users.length;
+
+      document.getElementById("totalRooms").innerText =
+        roomsData.rooms.length;
+
+      document.getElementById("totalSessions").innerText =
+        sessionsData.totalSessions || 0;
+
+      document.getElementById("activeSessions").innerText =
+        sessionsData.activeSessions || 0;
+
+      // CHART
+
+      new Chart(
+        document.getElementById("contributionChart"),
+        {
+          type:"bar",
+
+          data:{
+            labels:
+              usersData.users.map(u => u.username),
+
+            datasets:[{
+              label:"Contributions",
+              data:
+                usersData.users.map(u => u.totalEdits),
+
+              borderRadius:10
+            }]
+          },
+
+          options:{
+            responsive:true,
+            plugins:{
+              legend:{
+                display:false
+              }
+            }
+          }
+        }
+      );
+
+      // ACTIVE USERS
+
+      const container =
+        document.getElementById("activityContainer");
+
+        container.innerHTML = "";
+
+      usersData.users.slice(0,5).forEach(user => {
+
+        container.innerHTML += `
+
+          <div class="activity-item">
+
+            <div>
+
+              <div class="activity-user">
+                ${user.username}
+              </div>
+
+              <div class="activity-room">
+  Rooms: ${user.rooms ? user.rooms.join(", ") : "No Rooms"}
+</div>
+            </div>
+
+            <div class="activity-count">
+              ${user.totalEdits}
+            </div>
+
+          </div>
+
+        `;
+
+      });
+
+    }
+
+    loadDashboard();
+    setInterval(() => {
+
+  location.reload();
+
+}, 10000);
+    
+
+  </script>
+
+</body>
+</html>
