@@ -54,6 +54,6 @@ A real-time collaborative coding platform that allows multiple users to write, e
 
 ## Authors
 
-Ananya Paniraj
-Prerana BR
-Sanjana Reddy
+**Ananya Paniraj**
+**Prerana BR**
+**Sanjana Reddy**
