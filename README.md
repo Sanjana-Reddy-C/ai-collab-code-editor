@@ -7,11 +7,17 @@ A real-time collaborative coding platform that allows multiple users to write, e
 ## Features
 
 -> Real-time collaborative code editing
+
 -> Room-based collaboration
+
 -> AI-powered code review using OpenRouter
+
 -> Multi-language code execution
+
 -> User and room analytics dashboard
+
 -> Session tracking and activity logging
+
 -> MongoDB-based data storage
 
 ## Tech Stack
@@ -55,5 +61,7 @@ A real-time collaborative coding platform that allows multiple users to write, e
 ## Authors
 
 **Ananya Paniraj**
+
 **Prerana BR**
+
 **Sanjana Reddy**
