@@ -2,8 +2,16 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const aiRoutes = require("./routes/aiRoutes");
 
+require("dotenv").config({
+  path: require("path").resolve(__dirname, "../.env")
+});
+const connectDB = require("../src/config/db");
 
+connectDB();
+
+// ROOM MANAGER
 const {
   joinRoom,
   leaveRoom,
@@ -11,68 +19,144 @@ const {
   getRoomState
 } = require('./roomManager');
 
+// LOG SERVICES
+const {
+  saveCodeChange,
+  logEvent,
+  startSession,
+  endSession
+} = require('../services/logService');
+
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 });
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// ============================
+// HEALTH CHECK
+// ============================
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
-// SOCKET EVENTS
+// ============================
+// SOCKET CONNECTION
+// ============================
 io.on('connection', (socket) => {
+
   console.log(`🔌 User connected: ${socket.id}`);
 
-  // 1. User joins a room
-  socket.on('join-room', ({ roomId, username }) => {
+  // ============================
+  // JOIN ROOM
+  // ============================
+  socket.on('join-room', async ({ roomId, username }) => {
+
     socket.join(roomId);
+
     socket.roomId = roomId;
     socket.username = username;
 
-    // UPDATED: pass username
-    const room = joinRoom(roomId, socket.id, username);
+    // Join memory room
+    joinRoom(roomId, socket.id, username);
 
-    // Send existing state to new user
+    // Get room state
     const roomState = getRoomState(roomId);
+
+    // Send existing code
     socket.emit('load-code', {
       code: roomState.code,
       language: roomState.language
     });
 
-    // Broadcast user joined
+    // Broadcast joined
     io.to(roomId).emit('user-joined', {
       username,
       userCount: roomState.userCount
     });
 
     console.log(`👤 ${username} joined room: ${roomId}`);
+
+    // ============================
+    // START SESSION
+    // ============================
+    await startSession(roomId, username);
+
+    // ============================
+    // LOG EVENT
+    // ============================
+    await logEvent({
+      event: 'USER_JOINED',
+      roomId,
+      userId: socket.id,
+      username
+    });
+
   });
 
-  // 2. Code change (core sync)
-  socket.on('code-change', ({ roomId, code }) => {
-    // UPDATED: pass socket.id for analytics
+  // ============================
+  // CODE CHANGE
+  // ============================
+  socket.on('code-change', async ({ roomId, code, username }) => {
+
+    // Update room state
     updateCode(roomId, code, socket.id);
 
+    // Send to others
     socket.to(roomId).emit('code-update', { code });
+
+    // ============================
+    // SAVE CODE LOG
+    // ============================
+    await saveCodeChange({
+      roomId,
+      userId: username,
+      code,
+      changeType: 'edit'
+    });
+
+    // ============================
+    // SAVE EVENT
+    // ============================
+    await logEvent({
+      event: 'CODE_CHANGED',
+      roomId,
+      userId: username,
+      username
+    });
+
+    console.log(`💾 Code saved for room ${roomId}`);
+
   });
 
-  // 3. Cursor move
+  // ============================
+  // CURSOR MOVE
+  // ============================
   socket.on('cursor-move', ({ roomId, position }) => {
+
     socket.to(roomId).emit('cursor-update', {
       socketId: socket.id,
       position,
       username: socket.username
     });
+
   });
 
-  // 4. User disconnects
-  socket.on('disconnect', () => {
+  // ============================
+  // DISCONNECT
+  // ============================
+  socket.on('disconnect', async () => {
+
     if (socket.roomId) {
+
       const user = leaveRoom(socket.roomId, socket.id);
 
       const roomState = getRoomState(socket.roomId);
@@ -83,25 +167,330 @@ io.on('connection', (socket) => {
       });
 
       console.log(`❌ ${socket.username} left room: ${socket.roomId}`);
+
+      // ============================
+      // LOG EVENT
+      // ============================
+      await logEvent({
+        event: 'USER_LEFT',
+        roomId: socket.roomId,
+        userId: socket.id,
+        username: socket.username
+      });
+
+      // ============================
+      // END SESSION
+      // ============================
+      await endSession(socket.roomId, socket.username);
+
     }
+
   });
+
 });
 
-const PORT = process.env.PORT || 3000;
+// ============================
+// MOCK RUN CODE API
+// ============================
 app.post('/run-code', async (req, res) => {
+
   const { code, language } = req.body;
-  console.log("REQUEST BODY:", req.body);
+
+  console.log('REQUEST BODY:', req.body);
 
   if (language === 'javascript') {
-    // ✅ Find ALL console.log calls, not just the first
-    const matches = [...code.matchAll(/console\.log\((["'`])(.*?)\1\)/g)];
+
+    const matches = [
+      ...code.matchAll(/console\.log\((["'`])(.*?)\1\)/g)
+    ];
 
     if (matches.length > 0) {
-      const output = matches.map(m => m[2]).join('\n') + '\n';
-      return res.json({ run: { stdout: output, stderr: "" } });
+
+      const output =
+        matches.map(m => m[2]).join('\n') + '\n';
+
+      return res.json({
+        run: {
+          stdout: output,
+          stderr: ''
+        }
+      });
+
     }
+
   }
 
-  res.json({ run: { stdout: "Code executed (mock output)\n", stderr: "" } });
+  res.json({
+    run: {
+      stdout: 'Code executed (mock output)\n',
+      stderr: ''
+    }
+  });
+
 });
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// ============================
+// USERS ANALYTICS API
+// ============================
+
+const CodeLog = require("../models/CodeLog");
+const Session = require("../models/Session");
+app.get("/api/analytics/users", async (req, res) => {
+
+  try {
+
+    // TOTAL EDITS
+    const edits = await CodeLog.aggregate([
+
+      {
+        $group: {
+          _id: "$userId",
+          totalEdits: { $sum: 1 },
+          rooms: { $addToSet: "$roomId" }
+        }
+      },
+
+      {
+        $sort: {
+          totalEdits: -1
+        }
+      }
+
+    ]);
+
+    // ACTIVE USERS
+    const activeSessions =
+      await Session.find({ endTime: null });
+
+    const activeUserIds = [];
+
+    activeSessions.forEach(session => {
+
+      session.users.forEach(user => {
+
+        if (!activeUserIds.includes(user)) {
+          activeUserIds.push(user);
+        }
+
+      });
+
+    });
+
+    // FINAL RESPONSE
+    const formattedUsers = edits.map(user => {
+
+      const totalAllEdits =
+        edits.reduce((sum, u) => sum + u.totalEdits, 0);
+
+      const percentage =
+        ((user.totalEdits / totalAllEdits) * 100).toFixed(1);
+
+      return {
+
+  username: user._id,
+
+  totalEdits: user.totalEdits,
+
+  contributionPercentage: percentage,
+
+  roomsJoined: user.rooms.length,
+
+  rooms: user.rooms,
+
+  status:
+    activeUserIds.includes(user._id)
+      ? "Active"
+      : "Offline"
+
+};
+    });
+
+    res.json({
+      users: formattedUsers
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      error: "Analytics Error"
+    });
+
+  }
+
+});
+app.get("/api/analytics/rooms", async (req, res) => {
+
+  try {
+
+    // GET ROOM EDIT COUNTS
+    const roomEdits = await CodeLog.aggregate([
+
+      {
+        $group: {
+          _id: "$roomId",
+          totalEdits: { $sum: 1 }
+        }
+      },
+
+      {
+        $sort: {
+          totalEdits: -1
+        }
+      }
+
+    ]);
+
+    // FOR EACH ROOM FIND TOP USERS
+    const formattedRooms = [];
+
+    for (const room of roomEdits) {
+
+      const topUsers = await CodeLog.aggregate([
+
+        {
+          $match: {
+            roomId: room._id
+          }
+        },
+
+        {
+          $group: {
+            _id: "$userId",
+            edits: { $sum: 1 }
+          }
+        },
+
+        {
+          $sort: {
+            edits: -1
+          }
+        },
+
+        {
+          $limit: 3
+        }
+
+      ]);
+
+      formattedRooms.push({
+
+        roomId: room._id,
+
+        totalEdits: room.totalEdits,
+
+        topContributors: topUsers.map((u, index) => ({
+          username: u._id,
+          edits: u.edits,
+          rank: index + 1
+        }))
+
+      });
+
+    }
+
+    res.json({
+      rooms: formattedRooms
+    });
+
+  } catch (err) {
+
+    console.log("ROOM ANALYTICS ERROR:", err);
+
+    res.status(500).json({
+      error: "Rooms analytics failed"
+    });
+
+  }
+
+});
+// =========================
+// SESSIONS ANALYTICS
+// =========================
+
+// =========================
+// SESSIONS ANALYTICS
+// =========================
+
+app.get("/api/analytics/sessions", async (req, res) => {
+
+  try {
+
+    const sessions =
+      await Session.find();
+
+    const formattedSessions =
+      sessions.map(session => {
+
+        const startTime =
+          session.startTime || session.createdAt;
+
+        const endTime =
+          session.endTime || new Date();
+
+        const durationMs =
+          new Date(endTime) -
+          new Date(startTime);
+
+        const minutes =
+          Math.floor(durationMs / 60000);
+
+        return {
+
+          roomId:
+            session.roomId || "Unknown",
+
+          users:
+            session.users || [],
+
+          startTime,
+
+          duration:
+            `${minutes} min`,
+
+          status:
+            session.endTime
+              ? "Ended"
+              : "Active"
+
+        };
+
+      });
+
+    res.json({
+
+      totalSessions:
+        sessions.length,
+
+      activeSessions:
+        sessions.filter(
+          s => !s.endTime
+        ).length,
+
+      sessions:
+        formattedSessions
+
+    });
+
+  } catch (err) {
+
+    console.log("SESSION ERROR:", err);
+
+    res.status(500).json({
+      error: "Sessions analytics failed"
+    });
+
+  }
+
+});
+
+app.use("/api/ai", aiRoutes);
+// ============================
+// START SERVER
+// ============================
+const PORT = 3000;
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
