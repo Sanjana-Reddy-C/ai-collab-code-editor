@@ -7,6 +7,7 @@ const aiRoutes = require("./routes/aiRoutes");
 require("dotenv").config({
   path: require("path").resolve(__dirname, "../.env")
 });
+
 const connectDB = require("../src/config/db");
 
 connectDB();
@@ -44,6 +45,7 @@ const io = new Server(server, {
 // ============================
 // HEALTH CHECK
 // ============================
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -51,13 +53,15 @@ app.get('/health', (req, res) => {
 // ============================
 // SOCKET CONNECTION
 // ============================
+
 io.on('connection', (socket) => {
 
-  console.log(`🔌 User connected: ${socket.id}`);
+  console.log(` User connected: ${socket.id}`);
 
   // ============================
   // JOIN ROOM
   // ============================
+
   socket.on('join-room', async ({ roomId, username }) => {
 
     socket.join(roomId);
@@ -83,16 +87,18 @@ io.on('connection', (socket) => {
       userCount: roomState.userCount
     });
 
-    console.log(`👤 ${username} joined room: ${roomId}`);
+    console.log(` ${username} joined room: ${roomId}`);
 
     // ============================
     // START SESSION
     // ============================
+
     await startSession(roomId, username);
 
     // ============================
     // LOG EVENT
     // ============================
+
     await logEvent({
       event: 'USER_JOINED',
       roomId,
@@ -105,6 +111,7 @@ io.on('connection', (socket) => {
   // ============================
   // CODE CHANGE
   // ============================
+
   socket.on('code-change', async ({ roomId, code, username }) => {
 
     // Update room state
@@ -116,6 +123,7 @@ io.on('connection', (socket) => {
     // ============================
     // SAVE CODE LOG
     // ============================
+
     await saveCodeChange({
       roomId,
       userId: username,
@@ -126,6 +134,7 @@ io.on('connection', (socket) => {
     // ============================
     // SAVE EVENT
     // ============================
+
     await logEvent({
       event: 'CODE_CHANGED',
       roomId,
@@ -133,13 +142,14 @@ io.on('connection', (socket) => {
       username
     });
 
-    console.log(`💾 Code saved for room ${roomId}`);
+    console.log(`Code saved for room ${roomId}`);
 
   });
 
   // ============================
   // CURSOR MOVE
   // ============================
+
   socket.on('cursor-move', ({ roomId, position }) => {
 
     socket.to(roomId).emit('cursor-update', {
@@ -153,6 +163,7 @@ io.on('connection', (socket) => {
   // ============================
   // DISCONNECT
   // ============================
+
   socket.on('disconnect', async () => {
 
     if (socket.roomId) {
@@ -166,11 +177,12 @@ io.on('connection', (socket) => {
         userCount: roomState ? roomState.userCount : 0
       });
 
-      console.log(`❌ ${socket.username} left room: ${socket.roomId}`);
+      console.log(` ${socket.username} left room: ${socket.roomId}`);
 
       // ============================
       // LOG EVENT
       // ============================
+
       await logEvent({
         event: 'USER_LEFT',
         roomId: socket.roomId,
@@ -181,6 +193,7 @@ io.on('connection', (socket) => {
       // ============================
       // END SESSION
       // ============================
+
       await endSession(socket.roomId, socket.username);
 
     }
@@ -190,42 +203,154 @@ io.on('connection', (socket) => {
 });
 
 // ============================
-// MOCK RUN CODE API
+// PISTON RUN CODE API
 // ============================
+
 app.post('/run-code', async (req, res) => {
 
   const { code, language } = req.body;
 
-  console.log('REQUEST BODY:', req.body);
+  console.log('RUN REQUEST:', { language });
 
-  if (language === 'javascript') {
+  // ============================
+  // LANGUAGE CONFIGURATION
+  // ============================
 
-    const matches = [
-      ...code.matchAll(/console\.log\((["'`])(.*?)\1\)/g)
-    ];
+  const runtimes = {
 
-    if (matches.length > 0) {
+    python: {
+      language: 'python',
+      version: '3.12.0',
+      filename: 'main.py'
+    },
 
-      const output =
-        matches.map(m => m[2]).join('\n') + '\n';
+    javascript: {
+      language: 'javascript',
+      version: '20.11.1',
+      filename: 'main.js'
+    },
 
-      return res.json({
-        run: {
-          stdout: output,
-          stderr: ''
-        }
-      });
+    cpp: {
+      language: 'c++',
+      version: '10.2.0',
+      filename: 'main.cpp'
+    },
 
+    java: {
+      language: 'java',
+      version: '15.0.2',
+      filename: 'Main.java'
     }
+
+  };
+
+  const runtime = runtimes[language];
+
+  // ============================
+  // CHECK LANGUAGE
+  // ============================
+
+  if (!runtime) {
+
+    return res.status(400).json({
+      run: {
+        stdout: '',
+        stderr: `Unsupported language: ${language}`
+      }
+    });
 
   }
 
-  res.json({
-    run: {
-      stdout: 'Code executed (mock output)\n',
-      stderr: ''
+  try {
+
+    // ============================
+    // PISTON REQUEST
+    // ============================
+
+    const requestBody = {
+      language: runtime.language,
+      version: runtime.version,
+      files: [
+        {
+          name: runtime.filename,
+          content: code
+        }
+      ]
+    };
+
+    // ============================
+    // JAVA NEEDS MORE TIME
+    // ============================
+
+    if (language === 'java') {
+
+      requestBody.compile_timeout = 10000;
+      requestBody.run_timeout = 10000;
+      requestBody.compile_cpu_time = 10000;
+      requestBody.run_cpu_time = 10000;
+
     }
-  });
+
+    console.log('PISTON REQUEST:', requestBody);
+
+    // ============================
+    // SEND TO PISTON
+    // ============================
+
+    const pistonResponse = await fetch(
+      'http://127.0.0.1:2000/api/v2/execute',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify(requestBody)
+      }
+    );
+
+    const result = await pistonResponse.json();
+
+    console.log('PISTON RESULT:', result);
+
+    // ============================
+    // RETURN RESULT TO EDITOR
+    // ============================
+
+    res.json({
+
+      run: {
+        stdout: result.run?.stdout || '',
+        stderr:
+          result.run?.stderr ||
+          result.run?.message ||
+          ''
+      },
+
+      language: result.language,
+      version: result.version
+
+    });
+
+  } catch (error) {
+
+    // ============================
+    // PISTON ERROR
+    // ============================
+
+    console.error('PISTON ERROR:', error);
+
+    res.status(500).json({
+
+      run: {
+        stdout: '',
+        stderr: 'Execution error: ' + error.message
+      }
+
+    });
+
+  }
 
 });
 
@@ -235,11 +360,13 @@ app.post('/run-code', async (req, res) => {
 
 const CodeLog = require("../models/CodeLog");
 const Session = require("../models/Session");
+
 app.get("/api/analytics/users", async (req, res) => {
 
   try {
 
     // TOTAL EDITS
+
     const edits = await CodeLog.aggregate([
 
       {
@@ -259,6 +386,7 @@ app.get("/api/analytics/users", async (req, res) => {
     ]);
 
     // ACTIVE USERS
+
     const activeSessions =
       await Session.find({ endTime: null });
 
@@ -277,32 +405,36 @@ app.get("/api/analytics/users", async (req, res) => {
     });
 
     // FINAL RESPONSE
+
     const formattedUsers = edits.map(user => {
 
       const totalAllEdits =
         edits.reduce((sum, u) => sum + u.totalEdits, 0);
 
       const percentage =
-        ((user.totalEdits / totalAllEdits) * 100).toFixed(1);
+        totalAllEdits === 0
+          ? "0.0"
+          : ((user.totalEdits / totalAllEdits) * 100).toFixed(1);
 
       return {
 
-  username: user._id,
+        username: user._id,
 
-  totalEdits: user.totalEdits,
+        totalEdits: user.totalEdits,
 
-  contributionPercentage: percentage,
+        contributionPercentage: percentage,
 
-  roomsJoined: user.rooms.length,
+        roomsJoined: user.rooms.length,
 
-  rooms: user.rooms,
+        rooms: user.rooms,
 
-  status:
-    activeUserIds.includes(user._id)
-      ? "Active"
-      : "Offline"
+        status:
+          activeUserIds.includes(user._id)
+            ? "Active"
+            : "Offline"
 
-};
+      };
+
     });
 
     res.json({
@@ -320,11 +452,17 @@ app.get("/api/analytics/users", async (req, res) => {
   }
 
 });
+
+// ============================
+// ROOMS ANALYTICS API
+// ============================
+
 app.get("/api/analytics/rooms", async (req, res) => {
 
   try {
 
     // GET ROOM EDIT COUNTS
+
     const roomEdits = await CodeLog.aggregate([
 
       {
@@ -343,6 +481,7 @@ app.get("/api/analytics/rooms", async (req, res) => {
     ]);
 
     // FOR EACH ROOM FIND TOP USERS
+
     const formattedRooms = [];
 
     for (const room of roomEdits) {
@@ -381,9 +520,13 @@ app.get("/api/analytics/rooms", async (req, res) => {
         totalEdits: room.totalEdits,
 
         topContributors: topUsers.map((u, index) => ({
+
           username: u._id,
+
           edits: u.edits,
+
           rank: index + 1
+
         }))
 
       });
@@ -405,9 +548,6 @@ app.get("/api/analytics/rooms", async (req, res) => {
   }
 
 });
-// =========================
-// SESSIONS ANALYTICS
-// =========================
 
 // =========================
 // SESSIONS ANALYTICS
@@ -485,12 +625,18 @@ app.get("/api/analytics/sessions", async (req, res) => {
 
 });
 
+// ============================
+// AI ROUTES
+// ============================
+
 app.use("/api/ai", aiRoutes);
+
 // ============================
 // START SERVER
 // ============================
+
 const PORT = 3000;
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
