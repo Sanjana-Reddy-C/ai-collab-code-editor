@@ -145,6 +145,24 @@ io.on('connection', (socket) => {
     console.log(`Code saved for room ${roomId}`);
 
   });
+  // ============================
+// CHAT MESSAGE
+// ============================
+socket.on("chat-message", ({ roomId, username, message }) => {
+  if (!roomId || !message) return;
+
+  console.log(`💬 ${username}: ${message}`);
+
+  io.to(roomId).emit("chat-message", {
+    username: username || "Anonymous",
+    message: message,
+    senderId: socket.id,
+    time: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  });
+});
 
   // ============================
   // CURSOR MOVE
