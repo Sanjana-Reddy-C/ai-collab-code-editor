@@ -643,3 +643,114 @@ function showAIReview(message) {
     'block';
 
 }
+// ==========================
+// REAL-TIME ROOM CHAT
+// ==========================
+
+const chatInput = document.getElementById("chat-input");
+const sendChatBtn = document.getElementById("send-chat-btn");
+const chatMessages = document.getElementById("chat-messages");
+
+// SEND CHAT MESSAGE
+function sendChatMessage() {
+  const message = chatInput.value.trim();
+
+  if (!message) return;
+
+  socket.emit("chat-message", {
+    roomId: currentRoom,
+    username: currentUser,
+    message: message
+  });
+
+  chatInput.value = "";
+  chatInput.focus();
+}
+
+// SEND BUTTON
+sendChatBtn.addEventListener("click", sendChatMessage);
+
+// ENTER KEY
+chatInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    sendChatMessage();
+  }
+});
+
+// RECEIVE CHAT MESSAGE
+socket.on("chat-message", (data) => {
+
+  console.log("🔥 CHAT EVENT RECEIVED:", data);
+
+  const messageDiv = document.createElement("div");
+
+  // My message = right
+  // Other user's message = left
+  if (data.senderId === socket.id) {
+    messageDiv.className = "chat-message sent";
+  } else {
+    messageDiv.className = "chat-message received";
+  }
+
+  const usernameDiv = document.createElement("div");
+  usernameDiv.className = "chat-username";
+
+  usernameDiv.textContent =
+    data.senderId === socket.id ? "You" : data.username;
+
+  const textDiv = document.createElement("div");
+  textDiv.className = "chat-text";
+  textDiv.textContent = data.message;
+
+  const timeDiv = document.createElement("div");
+  timeDiv.className = "chat-time";
+  timeDiv.textContent = data.time || "";
+
+  messageDiv.appendChild(usernameDiv);
+  messageDiv.appendChild(textDiv);
+  messageDiv.appendChild(timeDiv);
+
+  chatMessages.appendChild(messageDiv);
+
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Notification for other users
+  if (data.senderId !== socket.id) {
+    showChatNotification(
+      `${data.username} sent a message`
+    );
+  }
+});
+
+// ==========================
+// CHAT NOTIFICATION
+// ==========================
+
+function showChatNotification(message) {
+
+  const notification =
+    document.createElement("div");
+
+  notification.className =
+    "chat-notification";
+
+  notification.textContent =
+    "💬 " + message;
+
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  setTimeout(() => {
+
+    notification.classList.remove("show");
+
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+
+  }, 3000);
+}
