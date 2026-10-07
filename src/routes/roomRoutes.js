@@ -4,6 +4,10 @@ const router = express.Router();
 const {
   createRoom,
   joinRoom,
+  getPendingRequests,
+  approveJoinRequest,
+  rejectJoinRequest,
+  getJoinRequestStatus,
   leaveRoom,
   getUsersInRoom,
 } = require("../controllers/roomController");
@@ -16,9 +20,11 @@ router.use(protect);
 // 🏠 Room APIs
 router.post("/create", createRoom);
 router.post("/join", joinRoom);
+router.get("/:roomId/request-status", getJoinRequestStatus);
+router.get("/:roomId/requests", getPendingRequests);
+router.post("/approve", approveJoinRequest);
+router.post("/reject", rejectJoinRequest);
 router.post("/leave", leaveRoom);
-
-// 👥 Get users in room
 router.get("/:roomId/users", getUsersInRoom);
 
 module.exports = router;

@@ -23,8 +23,21 @@ body { font-family: 'Segoe UI', sans-serif; background: #1e1e2e; color: #cdd6f4;
 #output-display { padding: 1rem; overflow-y: auto; flex: 1; font-size: 13px; color: #a6e3a1; white-space: pre-wrap; }
 
 /* Toast Notification */
-.toast { position: fixed; bottom: 2rem; right: 2rem; background: #313244; padding: 0.7rem 1.2rem; border-radius: 8px; border-left: 4px solid #89b4fa; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.toast {
+  position: fixed;
+  top: 75px;
+  right: 25px;
+  background: #1f2937;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border-left: 4px solid #89b4fa;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
 /* =========================
    Real-Time Chat
    ========================= */
@@ -272,4 +285,807 @@ body { font-family: 'Segoe UI', sans-serif; background: #1e1e2e; color: #cdd6f4;
 
 .chat-notification.show {
   transform: translateX(0);
+}
+/* =========================================
+   COLLABCODE AUTHENTICATION UI
+   ========================================= */
+
+#login-screen,
+#register-screen,
+#forgot-screen {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(59, 130, 246, 0.12),
+      transparent 45%
+    ),
+    #0b1120;
+
+  color: #e5e7eb;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+}
+
+
+/* =========================================
+   AUTH CARD
+   ========================================= */
+
+.auth-card {
+  width: 420px;
+  max-width: calc(100% - 40px);
+  box-sizing: border-box;
+
+  padding: 38px 36px;
+
+  background: #111827;
+  border: 1px solid #263244;
+  border-radius: 14px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(59, 130, 246, 0.05);
+
+  text-align: left;
+}
+
+
+/* =========================================
+   LOGO
+   ========================================= */
+
+.auth-logo {
+  width: 54px;
+  height: 54px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #1d4ed8;
+
+  font-size: 27px;
+
+  box-shadow:
+    0 8px 25px rgba(29, 78, 216, 0.3);
+}
+
+
+/* =========================================
+   HEADINGS
+   ========================================= */
+
+.auth-card h1 {
+  margin: 0;
+
+  text-align: center;
+
+  color: #f9fafb;
+
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.auth-card h2 {
+  margin: 30px 0 22px;
+
+  color: #f3f4f6;
+
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.auth-subtitle {
+  margin: 8px 0 0;
+
+  text-align: center;
+
+  color: #9ca3af;
+
+  font-size: 14px;
+}
+
+
+/* =========================================
+   INPUT GROUP
+   ========================================= */
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #d1d5db;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.input-group input {
+  width: 100%;
+  height: 46px;
+
+  box-sizing: border-box;
+
+  padding: 0 13px;
+
+  border: 1px solid #374151;
+  border-radius: 8px;
+
+  background: #0b1220;
+
+  color: #f9fafb;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.input-group input::placeholder {
+  color: #6b7280;
+}
+
+.input-group input:hover {
+  border-color: #4b5563;
+}
+
+.input-group input:focus {
+  border-color: #3b82f6;
+
+  background: #0d1526;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+
+/* =========================================
+   PASSWORD FIELD
+   ========================================= */
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+
+  right: 7px;
+  top: 50%;
+
+  width: 34px;
+  height: 34px;
+
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #9ca3af;
+
+  font-size: 16px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.password-toggle:hover {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+
+/* =========================================
+   FORGOT PASSWORD
+   ========================================= */
+
+.auth-options {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: -6px;
+  margin-bottom: 20px;
+}
+
+.forgot-password-btn {
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #60a5fa;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.forgot-password-btn:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+
+/* =========================================
+   PRIMARY BUTTON
+   ========================================= */
+
+.auth-primary-btn {
+  width: 100%;
+  height: 46px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
+
+.auth-primary-btn:hover {
+  background: #1d4ed8;
+
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.2);
+}
+
+.auth-primary-btn:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================
+   DIVIDER
+   ========================================= */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin: 25px 0;
+
+  color: #6b7280;
+
+  font-size: 11px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  background: #263244;
+}
+
+.auth-divider span {
+  letter-spacing: 1px;
+}
+
+
+/* =========================================
+   LOGIN / REGISTER SWITCH
+   ========================================= */
+
+.auth-switch {
+  margin: 0;
+
+  text-align: center;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+}
+
+.auth-switch button {
+  margin-left: 4px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #60a5fa;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.auth-switch button:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+
+/* =========================================
+   PASSWORD REQUIREMENTS
+   ========================================= */
+
+.password-requirements {
+  margin: 4px 0 20px;
+
+  padding: 12px 14px;
+
+  border: 1px solid #263244;
+  border-radius: 8px;
+
+  background: #0d1526;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+}
+
+.password-requirements p {
+  margin: 0 0 7px;
+
+  color: #d1d5db;
+
+  font-weight: 500;
+}
+
+.password-requirements span {
+  display: block;
+
+  margin: 3px 0;
+}
+
+
+/* =========================================
+   ERROR / SUCCESS MESSAGE
+   ========================================= */
+
+.auth-message {
+  min-height: 18px;
+
+  margin: 10px 0 0;
+
+  text-align: center;
+
+  color: #f87171;
+
+  font-size: 13px;
+}
+
+
+/* =========================================
+   BACK TO LOGIN
+   ========================================= */
+
+.auth-back-btn {
+  display: block;
+
+  margin: 18px auto 0;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.auth-back-btn:hover {
+  color: #f3f4f6;
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 500px) {
+
+  #login-screen,
+  #register-screen,
+  #forgot-screen {
+    padding: 20px;
+  }
+
+  .auth-card {
+    width: 100%;
+    padding: 30px 24px;
+  }
+
+  .auth-card h1 {
+    font-size: 25px;
+  }
+}
+/* =========================================
+   ROOM HOME
+   ========================================= */
+
+#room-home-screen {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(59, 130, 246, 0.12),
+      transparent 45%
+    ),
+    #0b1120;
+
+  color: #e5e7eb;
+}
+
+
+/* =========================================
+   MAIN CARD
+   ========================================= */
+
+#room-home-screen .auth-card {
+  width: 900px;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  padding: 42px;
+
+  background: #111827;
+
+  border: 1px solid #263244;
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(59, 130, 246, 0.05);
+
+  text-align: center;
+}
+
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+#room-home-screen .auth-card h1 {
+  margin-bottom: 8px;
+}
+
+#room-home-screen .auth-card h2 {
+  margin: 30px 0 8px;
+
+  color: #f3f4f6;
+
+  font-size: 22px;
+  font-weight: 600;
+}
+
+#room-home-screen .auth-subtitle {
+  line-height: 1.6;
+}
+
+
+/* =========================================
+   ROOM OPTIONS
+   ========================================= */
+
+#room-home-screen .room-options {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 22px;
+
+  margin-top: 30px;
+}
+
+
+/* =========================================
+   ACTION CARDS
+   ========================================= */
+
+.room-action-card {
+  padding: 26px;
+
+  background: #0d1526;
+
+  border: 1px solid #263244;
+  border-radius: 12px;
+
+  text-align: left;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.room-action-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.room-action-card h3 {
+  margin: 0 0 8px;
+
+  color: #f3f4f6;
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.room-action-card p {
+  margin: 0 0 20px;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   ROOM INPUT
+   ========================================= */
+
+#join-room-id {
+  width: 100%;
+  height: 44px;
+
+  box-sizing: border-box;
+
+  padding: 0 13px;
+
+  margin-bottom: 12px;
+
+  background: #0b1220;
+
+  border: 1px solid #374151;
+  border-radius: 8px;
+
+  color: #f9fafb;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#join-room-id::placeholder {
+  color: #6b7280;
+}
+
+#join-room-id:focus {
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+
+/* =========================================
+   ROOM BUTTONS
+   ========================================= */
+
+.room-action-card .auth-primary-btn {
+  margin-top: 0;
+}
+
+
+/* =========================================
+   MESSAGE
+   ========================================= */
+
+#room-home-message {
+  margin-top: 20px;
+}
+
+
+/* =========================================
+   BOTTOM ACTIONS
+   ========================================= */
+
+#room-dashboard-btn,
+#logout-btn {
+  display: inline-block;
+
+  width: auto;
+
+  margin-top: 24px;
+  margin-left: 5px;
+  margin-right: 5px;
+
+  padding: 10px 18px;
+
+  background: transparent;
+
+  border: 1px solid #374151;
+  border-radius: 8px;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#room-dashboard-btn:hover,
+#logout-btn:hover {
+  background: #1f2937;
+
+  border-color: #4b5563;
+
+  color: #f3f4f6;
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 700px) {
+
+  #room-home-screen {
+    padding: 20px;
+  }
+
+  #room-home-screen .auth-card {
+    padding: 30px 22px;
+  }
+
+  #room-home-screen .room-options {
+    grid-template-columns: 1fr;
+  }
+
+  .room-action-card {
+    padding: 20px;
+  }
+
+}
+/* ================================
+   PENDING JOIN REQUESTS
+================================ */
+
+#pending-requests-section {
+  margin-top: 20px;
+  width: 100%;
+}
+
+#pending-requests-section h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.pending-request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 14px 18px;
+  margin-bottom: 10px;
+
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #26354d;
+  border-radius: 12px;
+}
+
+.pending-request-card strong {
+  display: block;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.pending-request-card small {
+  display: block;
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.pending-request-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.pending-request-buttons button {
+  border: none;
+  border-radius: 7px;
+  padding: 7px 12px;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.pending-request-buttons button:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.pending-request-buttons button:first-child {
+  background: #22c55e;
+  color: white;
+}
+
+.pending-request-buttons button:last-child {
+  background: #ef4444;
+  color: white;
+}
+.independent-card-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.independent-card-wrapper .room-action-card {
+  width: 50%;
 }

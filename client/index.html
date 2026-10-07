@@ -24,32 +24,534 @@
   <!-- JOIN SCREEN -->
   <!-- ============================ -->
 
-  <div id="join-screen">
+ <!-- ============================ -->
+<!-- LOGIN SCREEN -->
+<!-- ============================ -->
 
-    <div class="join-card">
+<div id="login-screen">
 
-      <h1>💻 CollabCode</h1>
+  <div class="auth-card">
 
-      <p>Real-time collaborative code editor</p>
+    <div class="auth-logo">💻</div>
+
+    <h1>CollabCode</h1>
+
+    <p class="auth-subtitle">
+      Real-time collaborative coding
+    </p>
+
+    <h2>Welcome back!</h2>
+
+    <div class="input-group">
+
+      <label for="login-username">
+        User ID
+      </label>
 
       <input
-        id="username-input"
-        placeholder="Your name"
+        type="text"
+        id="login-username"
+        placeholder="Enter your User ID"
+        autocomplete="username"
       />
 
-      <input
-        id="room-input"
-        placeholder="Room ID (or leave blank to create)"
-      />
+    </div>
 
-      <button id="join-btn">
-        Join / Create Room
+
+    <div class="input-group">
+
+      <label for="login-password">
+        Password
+      </label>
+
+      <div class="password-wrapper">
+
+        <input
+          type="password"
+          id="login-password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          id="login-password-toggle"
+        >
+          👁
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="auth-options">
+
+      <button
+        type="button"
+        class="forgot-password-btn"
+        id="show-forgot-btn"
+      >
+        Forgot password?
       </button>
 
     </div>
 
+
+    <button
+      id="login-btn"
+      class="auth-primary-btn"
+    >
+      Login
+    </button>
+
+
+    <p
+      id="login-message"
+      class="auth-message"
+    ></p>
+
+
+    <div class="auth-divider">
+      <span>OR</span>
+    </div>
+
+
+    <p class="auth-switch">
+
+      New to CollabCode?
+
+      <button
+        type="button"
+        id="show-register-btn"
+      >
+        Create an account
+      </button>
+
+    </p>
+
   </div>
 
+</div>
+
+
+<!-- ============================ -->
+<!-- REGISTER SCREEN -->
+<!-- ============================ -->
+
+<div id="register-screen" style="display:none">
+
+  <div class="auth-card">
+
+    <div class="auth-logo">💻</div>
+
+    <h1>Create Account</h1>
+
+    <p class="auth-subtitle">
+      Join CollabCode
+    </p>
+
+
+    <div class="input-group">
+
+      <label for="register-username">
+        User ID
+      </label>
+
+      <input
+        type="text"
+        id="register-username"
+        placeholder="Choose a unique User ID"
+        autocomplete="username"
+      />
+
+    </div>
+
+
+    <div class="input-group">
+
+      <label for="register-email">
+        Email
+      </label>
+
+      <input
+        type="email"
+        id="register-email"
+        placeholder="Enter your email"
+        autocomplete="email"
+      />
+
+    </div>
+
+
+    <div class="input-group">
+
+      <label for="register-password">
+        Password
+      </label>
+
+      <div class="password-wrapper">
+
+        <input
+          type="password"
+          id="register-password"
+          placeholder="Create a password"
+          autocomplete="new-password"
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          id="register-password-toggle"
+        >
+          👁
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="input-group">
+
+      <label for="register-confirm-password">
+        Confirm Password
+      </label>
+
+      <div class="password-wrapper">
+
+        <input
+          type="password"
+          id="register-confirm-password"
+          placeholder="Confirm your password"
+          autocomplete="new-password"
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          id="register-confirm-password-toggle"
+        >
+          👁
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="password-requirements">
+
+      <p>Password should contain:</p>
+
+      <span>✓ At least 8 characters</span>
+      <span>✓ One uppercase letter</span>
+      <span>✓ One lowercase letter</span>
+      <span>✓ One number</span>
+
+    </div>
+
+
+    <button
+      id="register-btn"
+      class="auth-primary-btn"
+    >
+      Create Account
+    </button>
+
+
+    <p
+      id="register-message"
+      class="auth-message"
+    ></p>
+
+
+    <p class="auth-switch">
+
+      Already have an account?
+
+      <button
+        type="button"
+        id="show-login-btn"
+      >
+        Login
+      </button>
+
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- ============================ -->
+<!-- FORGOT PASSWORD SCREEN -->
+<!-- ============================ -->
+
+<!-- ============================ -->
+<!-- FORGOT PASSWORD SCREEN -->
+<!-- ============================ -->
+
+<div id="forgot-screen" style="display:none">
+
+  <div class="auth-card">
+
+    <div class="auth-logo">🔐</div>
+
+    <h1>Forgot Password?</h1>
+
+    <p class="auth-subtitle">
+      Recover your CollabCode account.
+    </p>
+
+
+    <!-- STEP 1: FIND ACCOUNT -->
+
+    <div id="forgot-request-section">
+
+      <div class="input-group">
+
+        <label for="forgot-identifier">
+          User ID or Email
+        </label>
+
+        <input
+          type="text"
+          id="forgot-identifier"
+          placeholder="Enter your User ID or email"
+          autocomplete="username"
+        />
+
+      </div>
+
+
+      <button
+        id="forgot-btn"
+        class="auth-primary-btn"
+      >
+        Continue
+      </button>
+
+    </div>
+
+
+    <!-- STEP 2: RESET PASSWORD -->
+
+    <div
+      id="reset-password-section"
+      style="display:none"
+    >
+
+      <div class="input-group">
+
+        <label for="reset-token">
+          Reset Token
+        </label>
+
+        <input
+          type="text"
+          id="reset-token"
+          placeholder="Enter reset token"
+          autocomplete="off"
+        />
+
+      </div>
+
+
+      <div class="input-group">
+
+        <label for="new-password">
+          New Password
+        </label>
+
+        <div class="password-wrapper">
+
+          <input
+            type="password"
+            id="new-password"
+            placeholder="Enter new password"
+            autocomplete="new-password"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            id="new-password-toggle"
+          >
+            👁
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="input-group">
+
+        <label for="confirm-new-password">
+          Confirm New Password
+        </label>
+
+        <div class="password-wrapper">
+
+          <input
+            type="password"
+            id="confirm-new-password"
+            placeholder="Confirm new password"
+            autocomplete="new-password"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            id="confirm-new-password-toggle"
+          >
+            👁
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <button
+        id="reset-password-btn"
+        class="auth-primary-btn"
+      >
+        Reset Password
+      </button>
+
+    </div>
+
+
+    <p
+      id="forgot-message"
+      class="auth-message"
+    ></p>
+
+
+    <button
+      type="button"
+      id="back-to-login-btn"
+      class="auth-back-btn"
+    >
+      ← Back to Login
+    </button>
+
+  </div>
+
+</div>
+<!-- ============================ -->
+<!-- ROOM HOME SCREEN -->
+<!-- ============================ -->
+
+<div id="room-home-screen" style="display:none">
+
+  <div class="auth-card">
+
+    <div class="auth-logo">💻</div>
+
+    <h1>CollabCode</h1>
+
+    <p class="auth-subtitle">
+      Your collaborative workspace
+    </p>
+
+    <h2>
+      Welcome, <span id="room-home-username">User</span> 👋
+    </h2>
+
+    <p class="auth-subtitle">
+      Create a room or join an existing room to start coding.
+    </p>
+
+
+    <!-- CREATE ROOM -->
+  <div class="room-options">
+
+    <div class="room-action-card">
+
+      <h3>🚀 Create a Room</h3>
+
+      <p>
+        Start a new collaborative coding session.
+      </p>
+
+      <button
+        id="create-room-btn"
+        class="auth-primary-btn"
+      >
+        Create Room
+      </button>
+
+    </div>
+
+
+    <!-- JOIN ROOM -->
+
+    <div class="room-action-card">
+
+      <h3>🔑 Join a Room</h3>
+
+      <p>
+        Enter a room ID to request access.
+      </p>
+
+      <input
+        type="text"
+        id="join-room-id"
+        placeholder="Enter Room ID"
+        autocomplete="off"
+      />
+
+            <button
+        id="join-room-btn"
+        class="auth-primary-btn"
+      >
+        Join Room
+      </button>
+
+    </div>
+  </div>
+    <!-- INDEPENDENT CODING -->
+    <div class="room-action-card">
+      <h3>💻 Code Independently</h3>
+      <p>Start coding on your own without joining a shared room.</p>
+
+      <button id="independent-code-btn" class="auth-primary-btn">
+        Start Coding
+      </button>
+    </div>
+  <div id="pending-requests-section" style="display:none">
+  <h3>🔔 Join Requests</h3>
+  <div id="pending-requests-list"></div>
+  </div>
+
+
+    <p
+      id="room-home-message"
+      class="auth-message"
+    ></p>
+
+
+    <!-- DASHBOARD -->
+
+    
+
+
+    <!-- LOGOUT -->
+
+    <button
+      id="logout-btn"
+      class="auth-back-btn"
+    >
+      🚪 Logout
+    </button>
+
+  </div>
+
+</div>
 
   <!-- ============================ -->
   <!-- EDITOR SCREEN -->
@@ -86,6 +588,12 @@
         AI Review
       </button>
 
+      <button id="dashboard-btn">
+      View Dashboard
+      </button>
+      <button id="editor-logout-btn">
+  🚪 Logout
+      </button>
     </div>
 
 
@@ -157,6 +665,14 @@
 
   <!-- Main editor -->
   <script type="module" src="editor.js"></script>
+  <script>
+  const dashboardBtn = document.getElementById("dashboard-btn");
+
+dashboardBtn.addEventListener("click", () => {
+  window.open("http://127.0.0.1:8080/dashboard.html", "_blank");
+});
+  
+  </script>
 
 </body>
 </html>

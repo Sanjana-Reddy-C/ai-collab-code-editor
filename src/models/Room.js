@@ -3,19 +3,24 @@ const mongoose = require("mongoose");
 const roomSchema = new mongoose.Schema(
   {
     roomId: {
-      type: Number,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+  },
     users: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+],
 
+  pendingRequests: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

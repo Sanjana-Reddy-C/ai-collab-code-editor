@@ -1,12 +1,15 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const aiRoutes = require("./routes/aiRoutes");
-
 require("dotenv").config({
   path: require("path").resolve(__dirname, "../.env")
 });
+const express = require('express');
+const http = require('http');
+const Room = require("../src/models/Room");
+const { Server } = require('socket.io');
+const cors = require('cors');
+const authRoutes = require("../src/routes/authRoutes");
+const aiRoutes = require("./routes/aiRoutes");
+const roomRoutes = require("../src/routes/roomRoutes");
+
 
 const connectDB = require("../src/config/db");
 
@@ -32,6 +35,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authRoutes);
+app.use("/api/room", roomRoutes);
 
 const server = http.createServer(app);
 
@@ -55,6 +60,22 @@ app.get('/health', (req, res) => {
 // ============================
 
 io.on('connection', (socket) => {
+  const token = socket.handshake.auth?.token;
+
+if (!token) {
+  socket.disconnect();
+  return;
+}
+
+try {
+  const jwt = require("jsonwebtoken");
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  socket.userId = decoded.id;
+} catch (error) {
+  console.error("Socket authentication failed");
+  socket.disconnect();
+  return;
+}
 
   console.log(` User connected: ${socket.id}`);
 
@@ -63,6 +84,28 @@ io.on('connection', (socket) => {
   // ============================
 
   socket.on('join-room', async ({ roomId, username }) => {
+  try {
+    // Check that the room exists
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      socket.emit('room-error', {
+        message: 'Room not found'
+      });
+      return;
+    }
+
+    // Check that the user is an approved member
+    const isMember = room.users.some(
+      (userId) => userId.toString() === socket.userId
+    );
+
+    if (!isMember) {
+      socket.emit('room-error', {
+        message: 'You are not an approved member of this room'
+      });
+      return;
+    }
 
     socket.join(roomId);
 
@@ -89,16 +132,10 @@ io.on('connection', (socket) => {
 
     console.log(` ${username} joined room: ${roomId}`);
 
-    // ============================
     // START SESSION
-    // ============================
-
     await startSession(roomId, username);
 
-    // ============================
     // LOG EVENT
-    // ============================
-
     await logEvent({
       event: 'USER_JOINED',
       roomId,
@@ -106,13 +143,22 @@ io.on('connection', (socket) => {
       username
     });
 
-  });
+  } catch (error) {
+    console.error('Join room socket error:', error);
 
+    socket.emit('room-error', {
+      message: 'Unable to join room'
+    });
+  }
+});
   // ============================
   // CODE CHANGE
   // ============================
 
   socket.on('code-change', async ({ roomId, code, username }) => {
+    if (socket.roomId !== roomId) {
+  return;
+  }
 
     // Update room state
     updateCode(roomId, code, socket.id);
@@ -149,6 +195,9 @@ io.on('connection', (socket) => {
 // CHAT MESSAGE
 // ============================
 socket.on("chat-message", ({ roomId, username, message }) => {
+  if (socket.roomId !== roomId) {
+  return;
+  }
   if (!roomId || !message) return;
 
   console.log(`💬 ${username}: ${message}`);
@@ -169,6 +218,9 @@ socket.on("chat-message", ({ roomId, username, message }) => {
   // ============================
 
   socket.on('cursor-move', ({ roomId, position }) => {
+    if (socket.roomId !== roomId) {
+  return;
+  }
 
     socket.to(roomId).emit('cursor-update', {
       socketId: socket.id,
