@@ -302,7 +302,7 @@
       // USERS
 
       const usersRes =
-        await fetch("http://localhost:3000/api/analytics/users");
+        await fetch("/api/analytics/users");
 
       const usersData =
         await usersRes.json();
@@ -310,7 +310,7 @@
       // ROOMS
 
       const roomsRes =
-        await fetch("http://localhost:3000/api/analytics/rooms");
+        await fetch("/api/analytics/rooms");
 
       const roomsData =
         await roomsRes.json();
@@ -318,7 +318,7 @@
       // SESSIONS
 
       const sessionsRes =
-        await fetch("http://localhost:3000/api/analytics/sessions");
+        await fetch("/api/analytics/sessions");
 
       const sessionsData =
         await sessionsRes.json();

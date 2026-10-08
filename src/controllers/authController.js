@@ -279,8 +279,14 @@ const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    // Send raw token only through email
-    await sendResetEmail(user.email, resetToken);
+    // Send raw token only through email.
+    // If sending fails, log it server-side but still return the generic
+    // response, so the API never reveals whether an account exists.
+    try {
+  await sendResetEmail(user.email, resetToken);
+} catch (emailError) {
+  console.error("Failed to send reset email:", emailError.message);
+}
 
     res.status(200).json({
       message: "If an account exists with that User ID or email, a password reset link has been sent."

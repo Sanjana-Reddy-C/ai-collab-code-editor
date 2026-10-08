@@ -189,7 +189,7 @@
     async function loadSessions(){
 
       const res =
-        await fetch("http://localhost:3000/api/analytics/sessions");
+        await fetch("/api/analytics/sessions");
 
       const data =
         await res.json();

@@ -222,7 +222,7 @@
     async function loadUsers(){
 
       const res =
-        await fetch("http://localhost:3000/api/analytics/users");
+        await fetch("/api/analytics/users");
 
       const data =
         await res.json();
