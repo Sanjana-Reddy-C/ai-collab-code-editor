@@ -2,7 +2,7 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { CodemirrorBinding } from 'y-codemirror';
 
-const socket = io('http://localhost:3000', {
+const socket = io({
   autoConnect: false
 });
 
@@ -140,16 +140,33 @@ requestPanel.style.display =
 
 
   // ==========================
-  // YJS SETUP
-  // ==========================
+// YJS SETUP
+// ==========================
 
-  if (collaborative) {
+if (collaborative) {
   const ydoc = new Y.Doc();
 
+  const yjsUrl =
+    import.meta.env.VITE_YJS_URL ||
+    'ws://localhost:1234';
+
+  console.log(
+    '[Yjs] Connecting to:',
+    yjsUrl
+  );
+
+  console.log(
+    '[Yjs] Room:',
+    currentRoom
+  );
+
   const provider = new WebsocketProvider(
-    'ws://localhost:1234',
+    yjsUrl,
     currentRoom,
-    ydoc
+    ydoc,
+    {
+      connect: true
+    }
   );
 
   const yText = ydoc.getText('codemirror');
@@ -160,17 +177,47 @@ requestPanel.style.display =
     provider.awareness
   );
 
-  
+  // ==========================
+  // YJS CONNECTION STATUS
+  // ==========================
+
+  provider.on('status', event => {
+    console.log(
+      '[Yjs] Connection status:',
+      event.status
+    );
+  });
+
+  provider.on('sync', isSynced => {
+    console.log(
+      '[Yjs] Sync completed:',
+      isSynced
+    );
+  });
+
+  provider.on('connection-error', error => {
+    console.error(
+      '[Yjs] Connection error:',
+      error
+    );
+  });
+
+  provider.on('connection-close', event => {
+    console.warn(
+      '[Yjs] Connection closed:',
+      event
+    );
+  });
 
   // ==========================
   // SYNC UPDATE TRACKING
   // ==========================
 
-  yText.observe(event => {
+  yText.observe(() => {
     const receiveTime = Date.now();
 
     console.log(
-      'Sync update received at:',
+      '[Yjs] Sync update received at:',
       receiveTime
     );
 
@@ -179,7 +226,7 @@ requestPanel.style.display =
         receiveTime - window.lastEditTime;
 
       console.log(
-        'Approx Sync Latency:',
+        '[Yjs] Approx Sync Latency:',
         latency,
         'ms'
       );
@@ -363,7 +410,7 @@ document
 
         const response =
           await fetch(
-            'http://localhost:3000/run-code',
+            '/run-code',
             {
               method: 'POST',
 
@@ -474,7 +521,7 @@ setTimeout(() => {
 
         const response =
           await fetch(
-            'http://localhost:3000/api/ai/analyze',
+            '/api/ai/analyze',
             {
               method: 'POST',
 
@@ -970,7 +1017,7 @@ registerBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "http://localhost:3000/api/auth/register",
+      "/api/auth/register",
       {
         method: "POST",
 
@@ -1115,7 +1162,7 @@ loginBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "http://localhost:3000/api/auth/login",
+      "/api/auth/login",
       {
         method: "POST",
 
@@ -1286,7 +1333,7 @@ forgotBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "http://localhost:3000/api/auth/forgot-password",
+      "/api/auth/forgot-password",
       {
         method: "POST",
 
@@ -1364,7 +1411,7 @@ createRoomBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "http://localhost:3000/api/room/create",
+      "/api/room/create",
       {
         method: "POST",
         headers: {
@@ -1425,7 +1472,7 @@ async function loadPendingRequests() {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/room/${hostRoomId}/requests`,
+      `/api/room/${hostRoomId}/requests`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -1511,7 +1558,7 @@ buttons.style.boxSizing = "border-box";
     try {
 
       const response = await fetch(
-        "http://localhost:3000/api/room/approve",
+        "/api/room/approve",
         {
           method: "POST",
           headers: {
@@ -1552,7 +1599,7 @@ buttons.style.boxSizing = "border-box";
     try {
 
       const response = await fetch(
-        "http://localhost:3000/api/room/reject",
+        "/api/room/reject",
         {
           method: "POST",
           headers: {
@@ -1645,7 +1692,7 @@ joinRoomBtn.addEventListener("click", async () => {
 
   try {
     const response = await fetch(
-      "http://localhost:3000/api/room/join",
+      "/api/room/join",
       {
         method: "POST",
         headers: {
@@ -1683,7 +1730,7 @@ joinRoomBtn.addEventListener("click", async () => {
 const checkRequestStatus = setInterval(async () => {
   try {
     const statusResponse = await fetch(
-      `http://localhost:3000/api/room/${roomId}/request-status`,
+      `/api/room/${roomId}/request-status`,
       {
         method: "GET",
         headers: {
@@ -1803,7 +1850,7 @@ async function restorePendingRequest() {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/room/${pendingRoomId}/request-status`,
+      `/api/room/${pendingRoomId}/request-status`,
       {
         method: "GET",
         headers: {
@@ -1830,7 +1877,7 @@ async function restorePendingRequest() {
   const restoredRequestCheck = setInterval(async () => {
     try {
       const statusResponse = await fetch(
-        `http://localhost:3000/api/room/${pendingRoomId}/request-status`,
+        `/api/room/${pendingRoomId}/request-status`,
         {
           method: "GET",
           headers: {
