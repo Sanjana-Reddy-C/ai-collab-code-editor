@@ -55,10 +55,7 @@ function leaveRoom(roomId, socketId) {
   }
   
   // Clean up empty rooms to save memory
-  if (room.users.size === 0) {
-    rooms.delete(roomId);
-    console.log(`[Room] Room ${roomId} deleted (empty)`);
-  }
+  
   return user;
 }
 

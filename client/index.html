@@ -669,7 +669,22 @@
   const dashboardBtn = document.getElementById("dashboard-btn");
 
 dashboardBtn.addEventListener("click", () => {
-  window.open("http://127.0.0.1:8080/dashboard.html", "_blank");
+
+  const roomId =
+    sessionStorage.getItem("currentRoom");
+
+  if (window.editorInstance && roomId) {
+
+    sessionStorage.setItem(
+      `editorCode_${roomId}`,
+      window.editorInstance.getValue()
+    );
+
+  }
+
+  window.location.href =
+    "dashboard/user-dashboard.html";
+
 });
   
   </script>

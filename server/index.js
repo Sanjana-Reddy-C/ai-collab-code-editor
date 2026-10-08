@@ -7,6 +7,7 @@ const Room = require("../src/models/Room");
 const { Server } = require('socket.io');
 const cors = require('cors');
 const authRoutes = require("../src/routes/authRoutes");
+const dashboardRoutes = require("../src/routes/dashboardRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const roomRoutes = require("../src/routes/roomRoutes");
 
@@ -36,6 +37,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/room", roomRoutes);
 
 const server = http.createServer(app);
@@ -108,7 +110,10 @@ try {
     }
 
     socket.join(roomId);
-
+    await Room.updateOne(
+    { roomId },
+    { $set: { isActive: true } }
+    );
     socket.roomId = roomId;
     socket.username = username;
 
@@ -156,42 +161,81 @@ try {
   // ============================
 
   socket.on('code-change', async ({ roomId, code, username }) => {
-    if (socket.roomId !== roomId) {
-  return;
+
+  if (socket.roomId !== roomId) {
+    return;
   }
 
-    // Update room state
-    updateCode(roomId, code, socket.id);
+  // Get previous code before updating
+  const previousCode = getRoomState(roomId)?.code || "";
 
-    // Send to others
-    socket.to(roomId).emit('code-update', { code });
+  // Calculate changed characters
+  let start = 0;
 
-    // ============================
-    // SAVE CODE LOG
-    // ============================
+const minLength = Math.min(
+  previousCode.length,
+  code.length
+);
 
-    await saveCodeChange({
-      roomId,
-      userId: username,
-      code,
-      changeType: 'edit'
-    });
+while (
+  start < minLength &&
+  previousCode[start] === code[start]
+) {
+  start++;
+}
 
-    // ============================
-    // SAVE EVENT
-    // ============================
+let oldEnd = previousCode.length - 1;
+let newEnd = code.length - 1;
 
-    await logEvent({
-      event: 'CODE_CHANGED',
-      roomId,
-      userId: username,
-      username
-    });
+while (
+  oldEnd >= start &&
+  newEnd >= start &&
+  previousCode[oldEnd] === code[newEnd]
+) {
+  oldEnd--;
+  newEnd--;
+}
 
-    console.log(`Code saved for room ${roomId}`);
+const removed =
+  oldEnd >= start
+    ? oldEnd - start + 1
+    : 0;
 
+const added =
+  newEnd >= start
+    ? newEnd - start + 1
+    : 0;
+
+const changeSize = removed + added;
+
+  // Update room state
+  updateCode(roomId, code, socket.id);
+
+  // Send to others
+  socket.to(roomId).emit('code-update', { code });
+
+  // SAVE CODE LOG
+  await saveCodeChange({
+    roomId,
+    userId: username,
+    code,
+    changeType: 'edit',
+    changeSize
   });
-  // ============================
+
+  // SAVE EVENT
+  await logEvent({
+    event: 'CODE_CHANGED',
+    roomId,
+    userId: username,
+    username
+  });
+
+  console.log(`Code saved for room ${roomId}`);
+
+});
+
+// ============================
 // CHAT MESSAGE
 // ============================
 socket.on("chat-message", ({ roomId, username, message }) => {
@@ -241,6 +285,15 @@ socket.on("chat-message", ({ roomId, username, message }) => {
       const user = leaveRoom(socket.roomId, socket.id);
 
       const roomState = getRoomState(socket.roomId);
+      const remainingUsers =
+  io.sockets.adapter.rooms.get(socket.roomId)?.size || 0;
+
+if (remainingUsers === 0) {
+  await Room.updateOne(
+    { roomId: socket.roomId },
+    { $set: { isActive: false } }
+  );
+}
 
       io.to(socket.roomId).emit('user-left', {
         username: user ? user.username : socket.username,
@@ -430,6 +483,8 @@ app.post('/run-code', async (req, res) => {
 
 const CodeLog = require("../models/CodeLog");
 const Session = require("../models/Session");
+const User = require("../src/models/User");
+
 
 app.get("/api/analytics/users", async (req, res) => {
 
@@ -438,22 +493,22 @@ app.get("/api/analytics/users", async (req, res) => {
     // TOTAL EDITS
 
     const edits = await CodeLog.aggregate([
+  {
+    $group: {
+      _id: "$userId",
+      totalEdits: { $sum: "$changeSize" },
+      rooms: { $addToSet: "$roomId" }
+    }
+  },
+  {
+    $sort: {
+      totalEdits: -1
+    }
+  }
+]);
 
-      {
-        $group: {
-          _id: "$userId",
-          totalEdits: { $sum: 1 },
-          rooms: { $addToSet: "$roomId" }
-        }
-      },
-
-      {
-        $sort: {
-          totalEdits: -1
-        }
-      }
-
-    ]);
+const allUsers = await User.find({}, "username");
+const allRooms = await Room.find({}, "roomId users");
 
     // ACTIVE USERS
 
@@ -476,37 +531,44 @@ app.get("/api/analytics/users", async (req, res) => {
 
     // FINAL RESPONSE
 
-    const formattedUsers = edits.map(user => {
+    const totalAllEdits =
+  edits.reduce((sum, u) => sum + u.totalEdits, 0);
 
-      const totalAllEdits =
-        edits.reduce((sum, u) => sum + u.totalEdits, 0);
+const formattedUsers = allUsers.map(user => {
 
-      const percentage =
-        totalAllEdits === 0
-          ? "0.0"
-          : ((user.totalEdits / totalAllEdits) * 100).toFixed(1);
+  const userEdits = edits.find(
+    u => u._id === user.username
+  );
 
-      return {
+  const totalEdits = userEdits
+    ? userEdits.totalEdits
+    : 0;
 
-        username: user._id,
+  const rooms = allRooms
+  .filter(room =>
+    room.users.some(
+      userId => userId.toString() === user._id.toString()
+    )
+  )
+  .map(room => room.roomId);
+  const percentage =
+    totalAllEdits === 0
+      ? "0.0"
+      : ((totalEdits / totalAllEdits) * 100).toFixed(1);
 
-        totalEdits: user.totalEdits,
+  return {
+    username: user.username,
+    totalEdits,
+    contributionPercentage: percentage,
+    roomsJoined: rooms.length,
+    rooms,
+    status:
+      activeUserIds.includes(user.username)
+        ? "Active"
+        : "Offline"
+  };
 
-        contributionPercentage: percentage,
-
-        roomsJoined: user.rooms.length,
-
-        rooms: user.rooms,
-
-        status:
-          activeUserIds.includes(user._id)
-            ? "Active"
-            : "Offline"
-
-      };
-
-    });
-
+});
     res.json({
       users: formattedUsers
     });
@@ -534,74 +596,78 @@ app.get("/api/analytics/rooms", async (req, res) => {
     // GET ROOM EDIT COUNTS
 
     const roomEdits = await CodeLog.aggregate([
+  {
+    $group: {
+      _id: "$roomId",
+      totalEdits: { $sum: "$changeSize" }
+    }
+  },
+  {
+    $sort: {
+      totalEdits: -1
+    }
+  }
+]);
 
-      {
-        $group: {
-          _id: "$roomId",
-          totalEdits: { $sum: 1 }
-        }
-      },
-
-      {
-        $sort: {
-          totalEdits: -1
-        }
-      }
-
-    ]);
-
+const allRooms = await Room.find({}, "roomId users").populate(
+  "users",
+  "username"
+);
     // FOR EACH ROOM FIND TOP USERS
 
     const formattedRooms = [];
 
-    for (const room of roomEdits) {
+for (const room of allRooms) {
 
-      const topUsers = await CodeLog.aggregate([
+  const roomEditData = roomEdits.find(
+    r => r._id === room.roomId
+  );
 
-        {
-          $match: {
-            roomId: room._id
-          }
-        },
+  const totalEdits = roomEditData
+    ? roomEditData.totalEdits
+    : 0;
 
-        {
-          $group: {
-            _id: "$userId",
-            edits: { $sum: 1 }
-          }
-        },
+  let topUsers = [];
 
-        {
-          $sort: {
-            edits: -1
-          }
-        },
-
-        {
-          $limit: 3
+  if (totalEdits > 0) {
+    topUsers = await CodeLog.aggregate([
+      {
+        $match: {
+          roomId: room.roomId
         }
+      },
+      {
+        $group: {
+          _id: "$userId",
+          edits: { $sum: "$changeSize" }
+        }
+      },
+      {
+        $sort: {
+          edits: -1
+        }
+      },
+      {
+        $limit: 3
+      }
+    ]);
+  }
 
-      ]);
+  formattedRooms.push({
+  roomId: room.roomId,
+  totalEdits,
 
-      formattedRooms.push({
+  members: room.users.map(user => user.username),
 
-        roomId: room._id,
+  contributorCount: topUsers.length,
 
-        totalEdits: room.totalEdits,
-
-        topContributors: topUsers.map((u, index) => ({
-
-          username: u._id,
-
-          edits: u.edits,
-
-          rank: index + 1
-
-        }))
-
-      });
-
-    }
+  topContributors: topUsers.map((u, index) => ({
+    username: u._id,
+    edits: u.edits,
+    rank: index + 1
+  }))
+});
+}
 
     res.json({
       rooms: formattedRooms

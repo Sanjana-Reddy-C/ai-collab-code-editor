@@ -10,12 +10,13 @@ const saveCodeChange = async (data) => {
  try{
 
    await CodeLog.create({
-      roomId: data.roomId,
-      userId: data.userId,
-      code: data.code,
-      lineNumber: data.lineNumber || null,
-      changeType: data.changeType || "edit"
-   });
+   roomId: data.roomId,
+   userId: data.userId,
+   code: data.code,
+   lineNumber: data.lineNumber || null,
+   changeType: data.changeType || "edit",
+   changeSize: data.changeSize || 0
+});
 
  }catch(err){
    console.log("Code log error:", err.message);

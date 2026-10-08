@@ -38,7 +38,8 @@ function openEditor(roomId, username, collaborative = true) {
   currentRoom = roomId;
   currentUser = username;
   isCollaborative = collaborative;
-
+  sessionStorage.setItem("currentRoom", roomId);
+  sessionStorage.setItem("currentCollaborative", collaborative);
   const chatPanel = document.getElementById("chat-panel");
   if (chatPanel) {
     chatPanel.style.display = collaborative ? "flex" : "none";
@@ -115,6 +116,14 @@ requestPanel.style.display =
       indentWithTabs: false
     }
   );
+  const savedCode =
+  sessionStorage.getItem(
+    `editorCode_${roomId}`
+  );
+
+if (savedCode !== null) {
+  editor.setValue(savedCode);
+}
 
 
   // ==========================
@@ -159,6 +168,12 @@ requestPanel.style.display =
     editor,
     provider.awareness
   );
+  // Restore room code from server when Yjs starts empty
+socket.once('load-code', ({ code }) => {
+  if (!yText.toString() && code) {
+    yText.insert(0, code);
+  }
+});
 
   
 
@@ -472,22 +487,28 @@ setTimeout(() => {
 
       try {
 
-        const response =
-          await fetch(
-            'http://localhost:3000/api/ai/analyze',
-            {
-              method: 'POST',
+        const token = sessionStorage.getItem("token");
 
-              headers: {
-                'Content-Type':
-                  'application/json'
-              },
+const response =
+  await fetch(
+    'http://localhost:3000/api/ai/analyze',
+  {
+    method: 'POST',
 
-              body: JSON.stringify({
-                code
-              })
-            }
-          );
+    headers: {
+      'Content-Type':
+        'application/json',
+
+      'Authorization':
+        `Bearer ${token}`
+    },
+
+    body: JSON.stringify({
+      code,
+      roomId: currentRoom
+    })
+  }
+);
 
 
         const data =
@@ -1922,3 +1943,30 @@ async function restorePendingRequest() {
 }
 
 restorePendingRequest();
+// RESTORE EDITOR AFTER RETURNING FROM DASHBOARD
+const savedToken = sessionStorage.getItem("token");
+const savedUsername = sessionStorage.getItem("username");
+const savedRoom = sessionStorage.getItem("currentRoom");
+const savedCollaborative =
+  sessionStorage.getItem("currentCollaborative") !== "false";
+
+if (savedToken && savedUsername) {
+  loginScreen.style.display = "none";
+  registerScreen.style.display = "none";
+  forgotScreen.style.display = "none";
+  document.getElementById("room-home-screen").style.display = "none";
+
+  connectSocket();
+
+  if (savedRoom) {
+    openEditor(
+      savedRoom,
+      savedUsername,
+      savedCollaborative
+    );
+  } else {
+    document.getElementById("room-home-screen").style.display = "flex";
+    document.getElementById("room-home-username").textContent =
+      savedUsername;
+  }
+}

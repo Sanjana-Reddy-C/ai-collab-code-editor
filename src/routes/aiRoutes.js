@@ -4,13 +4,18 @@ const router = express.Router();
 
 const {
   analyzeCodeController
-} = require("../controllers/aiController");
+} = require("../../src/controllers/aiController");
 
+const protect = require("../../src/middleware/authMiddleware");
 
 // =========================
 // AI ROUTES
 // =========================
-router.post("/analyze", analyzeCodeController);
 
+router.post(
+  "/analyze",
+  protect,
+  analyzeCodeController
+);
 
 module.exports = router;

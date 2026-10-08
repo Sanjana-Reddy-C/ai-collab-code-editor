@@ -22,9 +22,14 @@ const CodeLogSchema = new mongoose.Schema({
  },
 
  changeType:{
-   type:String,
-   default:"edit"
- },
+  type:String,
+  default:"edit"
+},
+
+changeSize:{
+  type:Number,
+  default:0
+},
 
  timestamp:{
    type:Date,

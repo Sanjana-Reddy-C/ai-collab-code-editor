@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard - CollabCode</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f6f8fb;
+      --sidebar: #111827;
+      --sidebar-hover: #1f2937;
+      --sidebar-active: #2563eb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --orange: #d97706;
+      --red: #dc2626;
+    }
+
+    body {
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* =========================
+       LAYOUT
+    ========================= */
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* =========================
+       SIDEBAR
+    ========================= */
+
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar);
+      color: white;
+
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      z-index: 100;
+    }
+
+    .brand {
+      height: 72px;
+
+      display: flex;
+      align-items: center;
+
+      padding: 0 22px;
+
+      border-bottom: 1px solid #273244;
+    }
+
+    .brand-icon {
+      font-size: 25px;
+      margin-right: 10px;
+    }
+
+    .brand-name {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .nav {
+      padding: 22px 12px;
+      flex: 1;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+
+      padding: 0 12px;
+      margin-bottom: 10px;
+    }
+
+    .nav-button {
+      width: 100%;
+
+      border: none;
+      background: transparent;
+      color: #d1d5db;
+
+      display: flex;
+      align-items: center;
+
+      padding: 12px;
+      margin-bottom: 4px;
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      font-size: 14px;
+      text-align: left;
+
+      transition: 0.2s;
+    }
+
+    .nav-button:hover {
+      background: var(--sidebar-hover);
+      color: white;
+    }
+
+    .nav-button.active {
+      background: var(--sidebar-active);
+      color: white;
+    }
+
+    .nav-icon {
+      width: 26px;
+      font-size: 17px;
+    }
+
+    .sidebar-bottom {
+      padding: 12px;
+      border-top: 1px solid #273244;
+    }
+
+    .editor-button {
+      background: #1f2937;
+    }
+
+    .logout-button {
+      color: #fca5a5;
+    }
+
+    .logout-button:hover {
+      background: #3f1d1d;
+      color: #fecaca;
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    .main {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+      min-height: 100vh;
+    }
+
+    /* =========================
+       TOPBAR
+    ========================= */
+
+    .topbar {
+      height: 72px;
+
+      background: white;
+      border-bottom: 1px solid var(--border);
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 32px;
+
+      position: sticky;
+      top: 0;
+
+      z-index: 50;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 650;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+
+      border-radius: 50%;
+
+      background: #dbeafe;
+      color: #1d4ed8;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-weight: 700;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* =========================
+       CONTENT
+    ========================= */
+
+    .content {
+      padding: 32px;
+      max-width: 1500px;
+      margin: auto;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .section-heading {
+      margin-bottom: 24px;
+    }
+
+    .section-heading h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* =========================
+       CARDS
+    ========================= */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      padding: 20px;
+
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-subtitle {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* =========================
+       PANELS
+    ========================= */
+
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      margin-bottom: 24px;
+
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px;
+
+      border-bottom: 1px solid var(--border);
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 650;
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    /* =========================
+       PROFILE
+    ========================= */
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .profile-item label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .profile-item strong {
+      font-size: 14px;
+    }
+
+    /* =========================
+       ROOM TOOLBAR
+    ========================= */
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+
+      margin-bottom: 18px;
+    }
+
+    .search-box {
+      width: 300px;
+
+      border: 1px solid var(--border);
+      border-radius: 7px;
+
+      padding: 10px 13px;
+
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search-box:focus {
+      border-color: var(--blue);
+    }
+
+    /* =========================
+       ROOM TABLE
+    ========================= */
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f9fafb;
+
+      color: #6b7280;
+
+      font-size: 12px;
+      font-weight: 600;
+
+      text-align: left;
+
+      padding: 13px 16px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 16px;
+
+      font-size: 13px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #fafafa;
+    }
+
+    .room-id {
+      color: var(--blue);
+      font-weight: 650;
+    }
+
+    /* =========================
+       BADGES
+    ========================= */
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 4px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-host {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-participant {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .badge-active {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge-ended {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    /* =========================
+       BUTTON
+    ========================= */
+
+    .small-button {
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1d4ed8;
+
+      padding: 7px 11px;
+
+      border-radius: 6px;
+
+      cursor: pointer;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .small-button:hover {
+      background: #dbeafe;
+    }
+
+    /* =========================
+       PROGRESS
+    ========================= */
+
+    .contribution {
+      min-width: 120px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+
+      background: #e5e7eb;
+
+      border-radius: 99px;
+
+      overflow: hidden;
+
+      margin-top: 5px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--blue);
+    }
+
+    /* =========================
+       SESSION / ACTIVITY
+    ========================= */
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 17px 20px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .list-row:last-child {
+      border-bottom: none;
+    }
+
+    .list-main {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .list-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .list-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .list-right {
+      text-align: right;
+    }
+
+    .duration {
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    /* =========================
+       ACTIVITY
+    ========================= */
+
+    .activity-icon {
+      width: 34px;
+      height: 34px;
+
+      border-radius: 8px;
+
+      background: #eff6ff;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-right: 12px;
+    }
+
+    .activity-left {
+      display: flex;
+      align-items: center;
+    }
+
+    /* =========================
+       AI
+    ========================= */
+
+    .ai-box {
+      border: 1px solid var(--border);
+      background: white;
+
+      border-radius: 10px;
+
+      padding: 30px;
+
+      text-align: center;
+    }
+
+    .ai-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .ai-box h2 {
+      margin-bottom: 8px;
+    }
+
+    .ai-box p {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 600px;
+      margin: auto;
+      line-height: 1.6;
+    }
+
+    /* =========================
+       EMPTY / LOADING
+    ========================= */
+
+    .empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .loading {
+      padding: 60px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+
+      border: 1px solid #fecaca;
+
+      padding: 15px;
+
+      border-radius: 8px;
+
+      margin-bottom: 20px;
+
+      display: none;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 1000px) {
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+
+      .sidebar {
+        width: 70px;
+      }
+
+      .brand-name,
+      .nav-label,
+      .nav-button span:not(.nav-icon),
+      .sidebar-bottom span:not(.nav-icon) {
+        display: none;
+      }
+
+      .brand {
+        justify-content: center;
+        padding: 0;
+      }
+
+      .nav-button {
+        justify-content: center;
+      }
+
+      .nav-icon {
+        width: auto;
+      }
+
+      .main {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+      }
+
+      .topbar {
+        padding: 0 18px;
+      }
+
+      .user-details {
+        display: none;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =========================
+       SIDEBAR
+  ========================== -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <span class="brand-icon">🚀</span>
+      <span class="brand-name">CollabCode</span>
+    </div>
+
+    <nav class="nav">
+
+      <div class="nav-label">
+        Workspace
+      </div>
+
+      <button
+        class="nav-button active"
+        data-section="overview"
+      >
+        <span class="nav-icon">▦</span>
+        <span>Overview</span>
+      </button>
+
+      <button
+        class="nav-button"
+        data-section="rooms"
+      >
+        <span class="nav-icon">⌂</span>
+        <span>My Rooms</span>
+      </button>
+
+      <button
+        class="nav-button"
+        data-section="sessions"
+      >
+        <span class="nav-icon">◷</span>
+        <span>Sessions</span>
+      </button>
+
+      <button
+        class="nav-button"
+        data-section="activity"
+      >
+        <span class="nav-icon">≡</span>
+        <span>Activity</span>
+      </button>
+
+      <button
+        class="nav-button"
+        data-section="ai"
+      >
+        <span class="nav-icon">✦</span>
+        <span>AI Insights</span>
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <button
+        class="nav-button editor-button"
+        id="editorButton"
+      >
+        <span class="nav-icon">←</span>
+        <span>Back to Editor</span>
+      </button>
+
+      <button
+        class="nav-button logout-button"
+        id="logoutButton"
+      >
+        <span class="nav-icon">↪</span>
+        <span>Sign out</span>
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div
+        class="page-title"
+        id="pageTitle"
+      >
+        Overview
+      </div>
+
+      <div class="user-menu">
+
+        <div class="avatar" id="avatar">
+          P
+        </div>
+
+        <div class="user-details">
+
+          <div
+            class="user-name"
+            id="topUsername"
+          >
+            Loading...
+          </div>
+
+          <div
+            class="user-email"
+            id="topEmail"
+          >
+            ...
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+      <div
+        id="error"
+        class="error"
+      ></div>
+
+      <div
+        id="loading"
+        class="loading"
+      >
+        Loading dashboard...
+      </div>
+
+
+      <!-- =========================
+           OVERVIEW
+      ========================== -->
+
+      <section
+        id="section-overview"
+        class="section active"
+      >
+
+        <div class="section-heading">
+
+          <h1>
+            Overview
+          </h1>
+
+          <p>
+            Your personal collaboration workspace and development activity.
+          </p>
+
+        </div>
+
+
+        <!-- STATS -->
+
+        <div class="stats-grid">
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Total Rooms
+            </div>
+
+            <div
+              class="stat-value"
+              id="totalRooms"
+            >
+              0
+            </div>
+
+            <div class="stat-subtitle">
+              Rooms you've participated in
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Rooms Hosted
+            </div>
+
+            <div
+              class="stat-value"
+              id="roomsCreated"
+            >
+              0
+            </div>
+
+            <div class="stat-subtitle">
+              Rooms created by you
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Code Changes
+            </div>
+
+            <div
+              class="stat-value"
+              id="totalEdits"
+            >
+              0
+            </div>
+
+            <div class="stat-subtitle">
+              Characters changed
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Sessions
+            </div>
+
+            <div
+              class="stat-value"
+              id="totalSessions"
+            >
+              0
+            </div>
+
+            <div class="stat-subtitle">
+              Collaboration sessions
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SECONDARY STATS -->
+
+        <div class="stats-grid">
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Edit Operations
+            </div>
+
+            <div
+              class="stat-value"
+              id="editCount"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Active Sessions
+            </div>
+
+            <div
+              class="stat-value"
+              id="activeSessions"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Session Time
+            </div>
+
+            <div
+              class="stat-value"
+              id="sessionMinutes"
+            >
+              0
+            </div>
+
+            <div class="stat-subtitle">
+              Total minutes
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Rooms Joined
+            </div>
+
+            <div
+              class="stat-value"
+              id="roomsParticipated"
+            >
+              0
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- PROFILE -->
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div class="panel-title">
+              Profile
+            </div>
+
+          </div>
+
+          <div class="panel-body">
+
+            <div class="profile-grid">
+
+              <div class="profile-item">
+
+                <label>
+                  Username
+                </label>
+
+                <strong id="profileUsername">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="profile-item">
+
+                <label>
+                  Email
+                </label>
+
+                <strong id="profileEmail">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="profile-item">
+
+                <label>
+                  Member since
+                </label>
+
+                <strong id="joinedAt">
+                  -
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RECENT ROOMS -->
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div class="panel-title">
+              Recent Rooms
+            </div>
+
+            <button
+              class="small-button"
+              onclick="showSection('rooms')"
+            >
+              View all
+            </button>
+
+          </div>
+
+          <div id="recentRooms"></div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           ROOMS
+      ========================== -->
+
+      <section
+        id="section-rooms"
+        class="section"
+      >
+
+        <div class="section-heading">
+
+          <h1>
+            My Rooms
+          </h1>
+
+          <p>
+            Rooms you created or participated in.
+          </p>
+
+        </div>
+
+
+        <div class="toolbar">
+
+          <input
+            type="text"
+            id="roomSearch"
+            class="search-box"
+            placeholder="Search rooms..."
+          />
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Room
+                  </th>
+
+                  <th>
+                    Role
+                  </th>
+
+                  <th>
+                    Members
+                  </th>
+
+                  <th>
+                    My Edits
+                  </th>
+
+                  <th>
+                    Contribution
+                  </th>
+
+                  <th>
+                    Sessions
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  
+
+                </tr>
+
+              </thead>
+
+              <tbody id="roomsTable"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           SESSIONS
+      ========================== -->
+
+      <section
+        id="section-sessions"
+        class="section"
+      >
+
+        <div class="section-heading">
+
+          <h1>
+            Sessions
+          </h1>
+
+          <p>
+            Your collaboration session history.
+          </p>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div id="sessionsList"></div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           ACTIVITY
+      ========================== -->
+
+      <section
+        id="section-activity"
+        class="section"
+      >
+
+        <div class="section-heading">
+
+          <h1>
+            Activity
+          </h1>
+
+          <p>
+            Recent actions from your collaboration workspace.
+          </p>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div id="activityList"></div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           AI INSIGHTS
+      ========================== -->
+
+      <!-- =========================
+     AI INSIGHTS
+========================== -->
+
+<section
+  id="section-ai"
+  class="section"
+>
+
+  <div class="section-heading">
+    <h1>AI Insights</h1>
+    <p>
+      AI-powered insights from your code review activity.
+    </p>
+  </div>
+
+  <!-- AI STATS -->
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-label">
+        AI Reviews
+      </div>
+
+      <div
+        class="stat-value"
+        id="aiTotalReviews"
+      >
+        0
+      </div>
+
+      <div class="stat-subtitle">
+        Total completed reviews
+      </div>
+    </div>
+
+
+    <div class="stat-card">
+      <div class="stat-label">
+        Rooms Reviewed
+      </div>
+
+      <div
+        class="stat-value"
+        id="aiRoomsReviewed"
+      >
+        0
+      </div>
+
+      <div class="stat-subtitle">
+        Rooms with AI activity
+      </div>
+    </div>
+
+
+    <div class="stat-card">
+      <div class="stat-label">
+        This Week
+      </div>
+
+      <div
+        class="stat-value"
+        id="aiReviewsThisWeek"
+      >
+        0
+      </div>
+
+      <div class="stat-subtitle">
+        Reviews in the last 7 days
+      </div>
+    </div>
+
+
+    <div class="stat-card">
+      <div class="stat-label">
+        Latest Review
+      </div>
+
+      <div
+        class="stat-value"
+        id="aiLatestReview"
+      >
+        —
+      </div>
+
+      <div class="stat-subtitle">
+        Most recent AI activity
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- LATEST AI REVIEW -->
+
+  <div class="panel">
+
+    <div class="panel-header">
+      <div class="panel-title">
+        Latest AI Review
+      </div>
+    </div>
+
+    <div
+      class="panel-body"
+      id="latestAIReview"
+    >
+
+      <div class="empty">
+        No AI reviews yet.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- AI ACTIVITY -->
+
+  <div class="panel">
+
+    <div class="panel-header">
+      <div class="panel-title">
+        Recent AI Activity
+      </div>
+    </div>
+
+    <div id="aiActivityList">
+
+      <div class="empty">
+        No AI activity yet.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- AI USAGE BY ROOM -->
+
+  <div class="panel">
+
+    <div class="panel-header">
+      <div class="panel-title">
+        AI Usage by Room
+      </div>
+    </div>
+
+    <div
+      class="panel-body"
+      id="aiRoomUsage"
+    >
+
+      <div class="empty">
+        No room usage data available.
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+    </div>
+
+  </main>
+
+</div>
+
+
+<script>
+
+  /* =========================
+     API
+  ========================== */
+
+  const API_BASE =
+    window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "";
+
+
+  let dashboardData = null;
+
+
+  /* =========================
+     NAVIGATION
+  ========================== */
+
+  const sectionNames = {
+    overview: "Overview",
+    rooms: "My Rooms",
+    sessions: "Sessions",
+    activity: "Activity",
+    ai: "AI Insights"
+  };
+
+
+  function showSection(sectionName) {
+
+    document
+      .querySelectorAll(".section")
+      .forEach(section => {
+
+        section.classList.remove("active");
+
+      });
+
+
+    document
+      .getElementById(`section-${sectionName}`)
+      .classList.add("active");
+
+
+    document
+      .querySelectorAll(".nav-button[data-section]")
+      .forEach(button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.section === sectionName
+        );
+
+      });
+
+
+    document.getElementById("pageTitle").textContent =
+      sectionNames[sectionName];
+
+  }
+
+
+  document
+    .querySelectorAll(".nav-button[data-section]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        showSection(button.dataset.section);
+
+      });
+
+    });
+
+
+  /* =========================
+     LOAD DASHBOARD
+  ========================== */
+
+  async function loadDashboard() {
+
+    try {
+
+      const token =
+        sessionStorage.getItem("token");
+
+      if (!token) {
+
+        throw new Error(
+          "Your login session has expired. Please login again."
+        );
+
+      }
+
+
+      const response = await fetch(
+        `${API_BASE}/api/dashboard/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.message || "Unable to load dashboard"
+        );
+
+      }
+
+
+      dashboardData = data;
+
+      renderDashboard(data);
+
+      await loadAIInsights();
+
+
+    } catch (error) {
+
+      console.error(
+        "Dashboard error:",
+        error
+      );
+
+
+      document
+        .getElementById("loading")
+        .style.display = "none";
+
+
+      const errorBox =
+        document.getElementById("error");
+
+
+      errorBox.textContent =
+        error.message;
+
+
+      errorBox.style.display =
+        "block";
+
+    }
+
+  }
+
+  // =====================================================
+// AI INSIGHTS
+// =====================================================
+
+async function loadAIInsights() {
+  try {
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(`${API_BASE}/api/dashboard/ai-insights`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load AI insights");
+    }
+
+    const data = await response.json();
+
+    renderAIInsights(data);
+
+  } catch (error) {
+    console.error("AI Insights Error:", error);
+
+    const latest = document.getElementById("latestAIReview");
+
+    if (latest) {
+      latest.innerHTML = `
+        <div class="empty">
+          Unable to load AI insights.
+        </div>
+      `;
+    }
+  }
+}
+
+
+// =====================================================
+// RENDER AI INSIGHTS
+// =====================================================
+
+function renderAIInsights(data) {
+  const overview = data?.overview || {};
+
+  // -------------------------
+  // STAT CARDS
+  // -------------------------
+
+  const totalReviews =
+    document.getElementById("aiTotalReviews");
+
+  const roomsReviewed =
+    document.getElementById("aiRoomsReviewed");
+
+  const reviewsThisWeek =
+    document.getElementById("aiReviewsThisWeek");
+
+  const latestReviewStat =
+    document.getElementById("aiLatestReview");
+
+
+  if (totalReviews) {
+    totalReviews.textContent =
+      overview.totalReviews ?? 0;
+  }
+
+  if (roomsReviewed) {
+    roomsReviewed.textContent =
+      overview.roomsReviewed ?? 0;
+  }
+
+  if (reviewsThisWeek) {
+    reviewsThisWeek.textContent =
+      overview.reviewsThisWeek ?? 0;
+  }
+
+
+  if (latestReviewStat) {
+    latestReviewStat.textContent =
+      data.latestReview
+        ? formatAIShortDate(data.latestReview.createdAt)
+        : "—";
+  }
+
+
+  // -------------------------
+  // LATEST REVIEW
+  // -------------------------
+
+  renderLatestAIReview(data.latestReview);
+
+
+  // -------------------------
+  // RECENT ACTIVITY
+  // -------------------------
+
+  renderAIActivity(data.recentReviews || []);
+
+
+  // -------------------------
+  // ROOM USAGE
+  // -------------------------
+
+  renderAIRoomUsage(data.reviewsByRoom || []);
+}
+
+
+// =====================================================
+// LATEST AI REVIEW
+// =====================================================
+
+function renderLatestAIReview(review) {
+  const container =
+    document.getElementById("latestAIReview");
+
+  if (!container) {
+    return;
+  }
+
+  if (!review) {
+    container.innerHTML = `
+      <div class="empty">
+        No AI reviews yet.
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="list-row">
+
+      <div class="list-main">
+
+        <div class="list-title">
+          Room ${escapeAIHtml(review.roomId)}
+        </div>
+
+        <div class="list-meta">
+          ${escapeAIHtml(review.reviewType || "Code Review")}
+          • ${formatAILongDate(review.createdAt)}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div
+      style="
+        margin-top: 16px;
+        padding: 18px;
+        background: var(--bg-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 10px;
+        line-height: 1.7;
+        white-space: normal;
+      "
+    >
+      ${formatAIResponse(review.aiResponse)}
+    </div>
+  `;
+}
+
+
+// =====================================================
+// RECENT AI ACTIVITY
+// =====================================================
+
+function renderAIActivity(reviews) {
+  const container =
+    document.getElementById("aiActivityList");
+
+  if (!container) {
+    return;
+  }
+
+  if (!reviews.length) {
+    container.innerHTML = `
+      <div class="empty">
+        No AI activity yet.
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = reviews.map(review => {
+
+    const response =
+      review.aiResponse || "";
+
+    const preview =
+      response
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 120);
+
+    return `
+      <div class="list-row">
+
+        <div class="list-main">
+
+          <div class="list-title">
+            AI Code Review
+          </div>
+
+          <div class="list-meta">
+            Room ${escapeAIHtml(review.roomId)}
+            • ${formatAILongDate(review.createdAt)}
+          </div>
+
+          <div class="list-meta">
+            ${escapeAIHtml(preview)}
+            ${response.length > 120 ? "..." : ""}
+          </div>
+
+        </div>
+
+        <div class="list-right">
+          <span class="badge">
+            Completed
+          </span>
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+// =====================================================
+// AI USAGE BY ROOM
+// =====================================================
+
+function renderAIRoomUsage(rooms) {
+  const container =
+    document.getElementById("aiRoomUsage");
+
+  if (!container) {
+    return;
+  }
+
+  if (!rooms.length) {
+    container.innerHTML = `
+      <div class="empty">
+        No room usage data available.
+      </div>
+    `;
+
+    return;
+  }
+
+  const maxReviews =
+    Math.max(
+      ...rooms.map(room => room.reviews),
+      1
+    );
+
+  container.innerHTML = rooms.map(room => {
+
+    const percentage =
+      Math.round(
+        (room.reviews / maxReviews) * 100
+      );
+
+    return `
+      <div
+        style="
+          padding: 14px 0;
+          border-bottom: 1px solid var(--border-color, #e5e7eb);
+        "
+      >
+
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+          "
+        >
+
+          <div>
+            <strong>
+              Room ${escapeAIHtml(room.roomId)}
+            </strong>
+
+            <div class="list-meta">
+              Last review:
+              ${formatAILongDate(room.latestReview)}
+            </div>
+          </div>
+
+          <strong>
+            ${room.reviews}
+          </strong>
+
+        </div>
+
+        <div
+          style="
+            width: 100%;
+            height: 6px;
+            background: var(--border-color, #e5e7eb);
+            border-radius: 10px;
+            overflow: hidden;
+          "
+        >
+
+          <div
+            style="
+              width: ${percentage}%;
+              height: 100%;
+              background: currentColor;
+              border-radius: 10px;
+            "
+          ></div>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+// =====================================================
+// AI DATE HELPERS
+// =====================================================
+
+function formatAIShortDate(date) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Date(date).toLocaleDateString(
+    undefined,
+    {
+      month: "short",
+      day: "numeric"
+    }
+  );
+}
+
+
+function formatAILongDate(date) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Date(date).toLocaleString(
+    undefined,
+    {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }
+  );
+}
+
+
+// =====================================================
+// AI RESPONSE FORMATTING
+// =====================================================
+
+function formatAIResponse(text) {
+  if (!text) {
+    return "No AI response available.";
+  }
+
+  return escapeAIHtml(text)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+}
+
+
+// =====================================================
+// BASIC HTML ESCAPING
+// =====================================================
+
+function escapeAIHtml(value) {
+  const div = document.createElement("div");
+
+  div.textContent =
+    value == null ? "" : String(value);
+
+  return div.innerHTML;
+}
+
+
+  /* =========================
+     RENDER
+  ========================== */
+
+  function renderDashboard(data) {
+
+    document
+      .getElementById("loading")
+      .style.display = "none";
+
+
+    const user =
+      data.user;
+
+    const overview =
+      data.overview;
+
+
+    /* USER */
+
+    document.getElementById(
+      "topUsername"
+    ).textContent =
+      user.username;
+
+
+    document.getElementById(
+      "topEmail"
+    ).textContent =
+      user.email;
+
+
+    document.getElementById(
+      "profileUsername"
+    ).textContent =
+      user.username;
+
+
+    document.getElementById(
+      "profileEmail"
+    ).textContent =
+      user.email;
+
+
+    document.getElementById(
+      "avatar"
+    ).textContent =
+      user.username
+        ? user.username.charAt(0).toUpperCase()
+        : "U";
+
+
+    document.getElementById(
+      "joinedAt"
+    ).textContent =
+      new Date(
+        user.joinedAt
+      ).toLocaleDateString();
+
+
+    /* OVERVIEW */
+
+    document.getElementById(
+      "totalRooms"
+    ).textContent =
+      overview.totalRooms;
+
+
+    document.getElementById(
+      "roomsCreated"
+    ).textContent =
+      overview.roomsCreated;
+
+
+    document.getElementById(
+      "roomsParticipated"
+    ).textContent =
+      overview.roomsParticipated;
+
+
+    document.getElementById(
+      "totalEdits"
+    ).textContent =
+      overview.totalEdits;
+
+
+    document.getElementById(
+      "editCount"
+    ).textContent =
+      overview.editCount;
+
+
+    document.getElementById(
+      "totalSessions"
+    ).textContent =
+      overview.totalSessions;
+
+
+    document.getElementById(
+      "activeSessions"
+    ).textContent =
+      overview.activeSessions;
+
+
+    document.getElementById(
+      "sessionMinutes"
+    ).textContent =
+      overview.totalSessionMinutes;
+
+
+    renderRecentRooms(
+      data.rooms
+    );
+
+
+    renderRooms(
+      data.rooms
+    );
+
+
+    renderSessions(
+      data.sessions
+    );
+
+
+    renderActivity(
+      data.activity
+    );
+
+  }
+
+
+  /* =========================
+     RECENT ROOMS
+  ========================== */
+
+  function renderRecentRooms(rooms) {
+
+    const container =
+      document.getElementById(
+        "recentRooms"
+      );
+
+
+    container.innerHTML = "";
+
+
+    if (!rooms || rooms.length === 0) {
+
+      container.innerHTML =
+        `<div class="empty">
+          No rooms found.
+        </div>`;
+
+      return;
+
+    }
+
+
+    rooms
+      .slice(0, 5)
+      .forEach(room => {
+
+        const row =
+          document.createElement("div");
+
+        row.className =
+          "list-row";
+
+
+        row.innerHTML = `
+
+          <div class="list-main">
+
+            <div class="list-title">
+              Room ${room.roomId}
+            </div>
+
+            <div class="list-meta">
+              ${room.memberCount} members
+              · ${room.edits} edits
+            </div>
+
+          </div>
+
+          <div>
+
+            <span class="badge ${
+              room.role === "Host"
+                ? "badge-host"
+                : "badge-participant"
+            }">
+              ${room.role}
+            </span>
+
+          </div>
+
+        `;
+
+
+        container.appendChild(row);
+
+      });
+
+  }
+
+
+  /* =========================
+     ROOMS TABLE
+  ========================== */
+
+  function renderRooms(rooms) {
+
+    const tbody =
+      document.getElementById(
+        "roomsTable"
+      );
+
+
+    tbody.innerHTML = "";
+
+
+    if (!rooms || rooms.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty">
+              No rooms found.
+            </div>
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+
+    rooms.forEach(room => {
+
+      const row =
+        document.createElement("tr");
+
+
+      const contribution =
+        Number(
+          room.contributionPercentage
+        ) || 0;
+
+
+      row.innerHTML = `
+  <td>
+    <span class="room-id">
+      ${room.roomId}
+    </span>
+  </td>
+
+  <td>
+    <span class="badge ${
+      room.role === "Host"
+        ? "badge-host"
+        : "badge-participant"
+    }">
+      ${room.role}
+    </span>
+  </td>
+
+  <td>
+    ${room.memberCount}
+  </td>
+
+  <td>
+    ${room.edits}
+  </td>
+
+  <td>
+    <div class="contribution">
+      <div>${contribution}%</div>
+      <div class="progress">
+        <div
+          class="progress-bar"
+          style="width:${Math.min(contribution, 100)}%"
+        ></div>
+      </div>
+    </div>
+  </td>
+
+  <td>
+    ${room.sessions}
+  </td>
+
+  <td>
+    <span class="badge ${
+      room.isActive ? "badge-active" : "badge-ended"
+    }">
+      ${room.isActive ? "Active" : "Inactive"}
+    </span>
+  </td>
+`;
+tbody.appendChild(row);
+  });
+}
+
+  /* =========================
+     SEARCH ROOMS
+  ========================== */
+
+  document
+    .getElementById("roomSearch")
+    .addEventListener(
+      "input",
+      function () {
+
+        if (!dashboardData) {
+          return;
+        }
+
+
+        const query =
+          this.value
+            .toLowerCase()
+            .trim();
+
+
+        const filtered =
+          dashboardData.rooms.filter(
+            room =>
+              String(room.roomId)
+                .toLowerCase()
+                .includes(query)
+          );
+
+
+        renderRooms(filtered);
+
+      }
+    );
+
+
+  /* =========================
+     OPEN ROOM
+  ========================== */
+
+  function openRoom(roomId) {
+
+    window.location.href =
+      `../?room=${encodeURIComponent(
+        roomId
+      )}`;
+
+  }
+
+
+  /* =========================
+     SESSIONS
+  ========================== */
+
+  function renderSessions(sessions) {
+  const container = document.getElementById("sessionsList");
+
+  container.innerHTML = "";
+
+  if (!sessions || sessions.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        No sessions found.
+      </div>
+    `;
+    return;
+  }
+
+  sessions.forEach(session => {
+    const row = document.createElement("div");
+
+    row.className = "list-row";
+
+    const start = new Date(
+      session.startTime
+    ).toLocaleString();
+
+    row.innerHTML = `
+      <div class="list-main">
+
+        <div class="list-title">
+          Room ${session.roomId}
+        </div>
+
+        <div class="list-meta">
+          ${start}
+        </div>
+
+      </div>
+
+      <div class="list-right">
+
+        <div class="duration">
+          ${session.durationMinutes} min
+        </div>
+
+        <div class="list-meta">
+
+          <span class="badge ${
+            session.status === "Active"
+              ? "badge-active"
+              : "badge-ended"
+          }">
+
+            ${session.status}
+
+          </span>
+
+        </div>
+
+      </div>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+  /* =========================
+     ACTIVITY
+  ========================== */
+
+  function renderActivity(activity) {
+
+    const container =
+      document.getElementById(
+        "activityList"
+      );
+
+
+    container.innerHTML = "";
+
+
+    if (!activity || activity.length === 0) {
+
+      container.innerHTML =
+        `<div class="empty">
+          No activity found.
+        </div>`;
+
+      return;
+
+    }
+
+
+    activity.forEach(item => {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "list-row";
+
+
+      const timestamp =
+        new Date(
+          item.timestamp
+        ).toLocaleString();
+
+
+      row.innerHTML = `
+
+        <div class="activity-left">
+
+          <div class="activity-icon">
+            ${getActivityIcon(
+              item.event
+            )}
+          </div>
+
+          <div class="list-main">
+
+            <div class="list-title">
+              ${formatEvent(
+                item.event
+              )}
+            </div>
+
+            <div class="list-meta">
+              Room ${item.roomId}
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="list-right">
+
+          <div class="list-meta">
+            ${timestamp}
+          </div>
+
+        </div>
+
+      `;
+
+
+      container.appendChild(row);
+
+    });
+  }
+
+
+  function formatEvent(event) {
+
+    return event
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, c =>
+        c.toUpperCase()
+      );
+
+  }
+
+
+  function getActivityIcon(event) {
+
+    if (
+      event.includes("CODE")
+    ) {
+      return "⌨";
+    }
+
+    if (
+      event.includes("JOIN")
+    ) {
+      return "→";
+    }
+
+    if (
+      event.includes("LEFT")
+    ) {
+      return "←";
+    }
+
+    if (
+      event.includes("CHAT")
+    ) {
+      return "💬";
+    }
+
+    return "•";
+
+  }
+
+
+  /* =========================
+     BACK TO EDITOR
+  ========================== */
+
+  document
+  .getElementById("editorButton")
+  .addEventListener("click", () => {
+    window.location.href = "../index.html";
+    
+  });
+
+
+  /* =========================
+     LOGOUT
+  ========================== */
+
+  document
+    .getElementById("logoutButton")
+    .addEventListener(
+      "click",
+      () => {
+
+        sessionStorage.removeItem(
+          "token"
+        );
+
+        sessionStorage.removeItem(
+          "user"
+        );
+
+        sessionStorage.removeItem(
+          "username"
+        );
+
+        window.location.href =
+          "../";
+
+      }
+    );
+
+
+  /* =========================
+     START
+  ========================== */
+
+  loadDashboard();
+
+</script>
+
+</body>
+</html>

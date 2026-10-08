@@ -217,7 +217,9 @@
 
       container.innerHTML = "";
 
-      data.rooms.forEach(room => {
+      data.rooms
+  .sort((a, b) => b.totalEdits - a.totalEdits)
+  .forEach(room => {
 
         let contributorsHTML = "";
 
@@ -249,8 +251,13 @@
               </div>
 
               <div class="room-stat">
-                ✏️ Contributions:
-                <b>${user.edits}</b>
+  👥 Members:
+  <b>${room.members.length}</b>
+</div>
+
+              <div class="room-stat">
+              ✏️ Contributors:
+              <b>${room.contributorCount}</b>
               </div>
 
               <div class="room-stat">
@@ -292,10 +299,28 @@
             </div>
 
             <div class="contributors-title">
-              Top Contributors
-            </div>
+  Top Contributors
+</div>
 
-            ${contributorsHTML}
+${contributorsHTML}
+
+${
+  room.members.length > 0
+    ? `
+      <div class="contributors-title">
+        👥 Members
+      </div>
+
+      ${room.members.map(username => `
+        <div class="contributor">
+          <div class="contributor-name">
+            ${username}
+          </div>
+        </div>
+      `).join("")}
+    `
+    : ""
+}
 
           </div>
 
