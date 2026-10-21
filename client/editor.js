@@ -2,12 +2,7 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { CodemirrorBinding } from 'y-codemirror';
 
-// const socket = io('https://solutions-antibodies-candles-mainly.trycloudflare.com', {
-//   autoConnect: false
-// });
-const BACKEND_URL = "https://solutions-antibodies-candles-mainly.trycloudflare.com";
-
-const socket = io(BACKEND_URL, {
+const socket = io({
   autoConnect: false
 });
 
@@ -134,12 +129,18 @@ if (savedCode !== null) {
   // ==========================
   // CODE CHANGE
   // ==========================
-
-  editor.on('change', () => {
+    editor.on('change', (cm, change) => {
 
     if (isApplyingRemote) {
       return;
     }
+
+    // Changes pushed in by Yjs (other users) are tagged 'y-codemirror'.
+    // Only edits typed on THIS device are reported to the server.
+    if (change && change.origin === 'y-codemirror') {
+      return;
+    }
+
 
     window.lastEditTime = Date.now();
 
@@ -160,8 +161,8 @@ if (savedCode !== null) {
   if (collaborative) {
   const ydoc = new Y.Doc();
 
-  const provider = new WebsocketProvider(
-    'ws://localhost:1234',
+   const provider = new WebsocketProvider(
+    (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/yjs',
     currentRoom,
     ydoc
   );
@@ -173,12 +174,36 @@ if (savedCode !== null) {
     editor,
     provider.awareness
   );
-  // Restore room code from server when Yjs starts empty
-socket.once('load-code', ({ code }) => {
-  if (!yText.toString() && code) {
-    yText.insert(0, code);
+
+  // Restore room code ONLY after Yjs has finished syncing AND the socket
+  // server has sent its copy. Doing it earlier duplicates the text.
+  let yjsSynced = false;
+  let serverCode = null;
+  let restoreDone = false;
+
+  function tryRestore() {
+    if (restoreDone || !yjsSynced || serverCode === null) return;
+    restoreDone = true;
+    if (yText.length === 0 && serverCode) {
+      yText.insert(0, serverCode);
+    }
   }
-});
+
+  provider.on('sync', (isSynced) => {
+    if (isSynced) {
+      yjsSynced = true;
+      tryRestore();
+    }
+  });
+
+  provider.on('status', ({ status }) => {
+    console.log('Yjs connection status:', status);
+  });
+
+  socket.once('load-code', ({ code }) => {
+    serverCode = code || '';
+    tryRestore();
+  });
 
   
 
@@ -266,23 +291,6 @@ socket.on(
 );
 
 // RECEIVE CODE UPDATES
-socket.on("code-update", (data) => {
-  if (!editor || !data) return;
-
-  const code = typeof data === "string" ? data : data.code;
-
-  if (typeof code !== "string") return;
-
-  if (editor.getValue() !== code) {
-    isApplyingRemote = true;
-
-    try {
-      editor.setValue(code);
-    } finally {
-      isApplyingRemote = false;
-    }
-  }
-});
 
 
 // ==========================
@@ -402,7 +410,7 @@ document
 
         const response =
           await fetch(
-            'https://solutions-antibodies-candles-mainly.trycloudflare.com/run-code',
+            '/run-code',
             {
               method: 'POST',
 
@@ -515,7 +523,7 @@ setTimeout(() => {
 
 const response =
   await fetch(
-    'https://solutions-antibodies-candles-mainly.trycloudflare.com/api/ai/analyze',
+    '/api/ai/analyze',
   {
     method: 'POST',
 
@@ -1015,7 +1023,7 @@ registerBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/auth/register",
+      "/api/auth/register",
       {
         method: "POST",
 
@@ -1160,7 +1168,7 @@ loginBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/auth/login",
+      "/api/auth/login",
       {
         method: "POST",
 
@@ -1331,7 +1339,7 @@ forgotBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/auth/forgot-password",
+      "/api/auth/forgot-password",
       {
         method: "POST",
 
@@ -1409,7 +1417,7 @@ createRoomBtn.addEventListener("click", async () => {
   try {
 
     const response = await fetch(
-      "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/create",
+      "/api/room/create",
       {
         method: "POST",
         headers: {
@@ -1470,7 +1478,7 @@ async function loadPendingRequests() {
 
   try {
     const response = await fetch(
-      `https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/${hostRoomId}/requests`,
+      `/api/room/${hostRoomId}/requests`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -1556,7 +1564,7 @@ buttons.style.boxSizing = "border-box";
     try {
 
       const response = await fetch(
-        "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/approve",
+        "/api/room/approve",
         {
           method: "POST",
           headers: {
@@ -1597,7 +1605,7 @@ buttons.style.boxSizing = "border-box";
     try {
 
       const response = await fetch(
-        "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/reject",
+        "/api/room/reject",
         {
           method: "POST",
           headers: {
@@ -1690,7 +1698,7 @@ joinRoomBtn.addEventListener("click", async () => {
 
   try {
     const response = await fetch(
-      "https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/join",
+      "/api/room/join",
       {
         method: "POST",
         headers: {
@@ -1728,7 +1736,7 @@ joinRoomBtn.addEventListener("click", async () => {
 const checkRequestStatus = setInterval(async () => {
   try {
     const statusResponse = await fetch(
-      `https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/${roomId}/request-status`,
+      `/api/room/${roomId}/request-status`,
       {
         method: "GET",
         headers: {
@@ -1848,7 +1856,7 @@ async function restorePendingRequest() {
 
   try {
     const response = await fetch(
-      `https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/${pendingRoomId}/request-status`,
+      `/api/room/${pendingRoomId}/request-status`,
       {
         method: "GET",
         headers: {
@@ -1875,7 +1883,7 @@ async function restorePendingRequest() {
   const restoredRequestCheck = setInterval(async () => {
     try {
       const statusResponse = await fetch(
-        `https://solutions-antibodies-candles-mainly.trycloudflare.com/api/room/${pendingRoomId}/request-status`,
+        `/api/room/${pendingRoomId}/request-status`,
         {
           method: "GET",
           headers: {
