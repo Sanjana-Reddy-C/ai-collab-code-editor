@@ -273,7 +273,25 @@ socket.on("chat-message", ({ roomId, username, message }) => {
     });
 
   });
+    // ============================
+  // YJS SYNC RELAY
+  // ============================
 
+  socket.on('yjs-update', ({ roomId, update }) => {
+    if (socket.roomId !== roomId) return;
+    socket.to(roomId).emit('yjs-update', { update });
+  });
+
+  socket.on('yjs-sync-request', ({ roomId }) => {
+    if (socket.roomId !== roomId) return;
+    socket.to(roomId).emit('yjs-sync-request', { requester: socket.id });
+  });
+
+  socket.on('yjs-sync-response', ({ to, update }) => {
+    const target = io.sockets.sockets.get(to);
+    if (!target || target.roomId !== socket.roomId) return;
+    target.emit('yjs-update', { update });
+  });
   // ============================
   // DISCONNECT
   // ============================

@@ -1,5 +1,4 @@
 import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
 import { CodemirrorBinding } from 'y-codemirror';
 
 const socket = io({
@@ -29,6 +28,44 @@ let currentUser;
 let isCollaborative = true;
 let isApplyingRemote = false;
 
+// ==========================
+// YJS SYNC OVER SOCKET.IO
+// ==========================
+
+function connectYjsOverSocket(socket, ydoc, roomId) {
+  let ready = false;
+
+  // my edits -> everyone else
+  ydoc.on('update', (update, origin) => {
+    if (origin === 'remote' || !ready) return;
+    socket.emit('yjs-update', { roomId, update });
+  });
+
+  // other people's edits -> me
+  socket.on('yjs-update', ({ update }) => {
+    Y.applyUpdate(ydoc, new Uint8Array(update), 'remote');
+  });
+
+  // someone just joined and wants the current document
+  socket.on('yjs-sync-request', ({ requester }) => {
+    if (!ready) return;
+    socket.emit('yjs-sync-response', {
+      to: requester,
+      update: Y.encodeStateAsUpdate(ydoc)
+    });
+  });
+
+  return {
+    start() {
+      ready = true;
+      socket.emit('yjs-sync-request', { roomId });
+      socket.emit('yjs-update', {
+        roomId,
+        update: Y.encodeStateAsUpdate(ydoc)
+      });
+    }
+  };
+}
 
 // ==========================
 // JOIN ROOM
@@ -160,50 +197,72 @@ if (savedCode !== null) {
 
   if (collaborative) {
   const ydoc = new Y.Doc();
-
-   const provider = new WebsocketProvider(
-    (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/yjs',
-    currentRoom,
-    ydoc
-  );
-
   const yText = ydoc.getText('codemirror');
 
-  const binding = new CodemirrorBinding(
-    yText,
-    editor,
-    provider.awareness
-  );
+  // no awareness (remote cursors) needed -> pass null
+  const binding = new CodemirrorBinding(yText, editor, null);
 
-  // Restore room code ONLY after Yjs has finished syncing AND the socket
-  // server has sent its copy. Doing it earlier duplicates the text.
-  let yjsSynced = false;
+  const sync = connectYjsOverSocket(socket, ydoc, currentRoom);
+
   let serverCode = null;
-  let restoreDone = false;
 
-  function tryRestore() {
-    if (restoreDone || !yjsSynced || serverCode === null) return;
-    restoreDone = true;
-    if (yText.length === 0 && serverCode) {
-      yText.insert(0, serverCode);
-    }
-  }
-
-  provider.on('sync', (isSynced) => {
-    if (isSynced) {
-      yjsSynced = true;
-      tryRestore();
-    }
-  });
-
-  provider.on('status', ({ status }) => {
-    console.log('Yjs connection status:', status);
-  });
-
+  // the server confirms we joined -> start syncing
   socket.once('load-code', ({ code }) => {
     serverCode = code || '';
-    tryRestore();
+    sync.start();
   });
+
+  // if nobody else is in the room, restore the saved code
+  socket.once('user-joined', ({ userCount }) => {
+    setTimeout(() => {
+      if (yText.length === 0 && serverCode) {
+        yText.insert(0, serverCode);
+      }
+    }, userCount <= 1 ? 0 : 3000);
+  });
+  //  const provider = new WebsocketProvider(
+  //   (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/yjs',
+  //   currentRoom,
+  //   ydoc
+  // );
+
+  // const yText = ydoc.getText('codemirror');
+
+  // const binding = new CodemirrorBinding(
+  //   yText,
+  //   editor,
+  //   provider.awareness
+  // );
+
+  // // Restore room code ONLY after Yjs has finished syncing AND the socket
+  // // server has sent its copy. Doing it earlier duplicates the text.
+  // let yjsSynced = false;
+  // let serverCode = null;
+  // let restoreDone = false;
+
+  // function tryRestore() {
+  //   if (restoreDone || !yjsSynced || serverCode === null) return;
+  //   restoreDone = true;
+  //   if (yText.length === 0 && serverCode) {
+  //     yText.insert(0, serverCode);
+  //   }
+  // }
+
+  // provider.on('sync', (isSynced) => {
+  //   if (isSynced) {
+  //     yjsSynced = true;
+  //     tryRestore();
+  //   }
+  // });
+
+  // provider.on('status', ({ status }) => {
+  //   console.log('Yjs connection status:', status);
+  // });
+
+  // socket.once('load-code', ({ code }) => {
+  //   serverCode = code || '';
+  //   tryRestore();
+  // });
 
   
 
